@@ -51,10 +51,10 @@ This README describes everything built so far, how it fits together, how to run 
 | 6b | GeoRSCLIP scene tags, caption match scores, Compare models | Delivered, real weights not yet run on your Mac |
 | 7 | Historical change (same pin across dates, change maps) | In progress |
 | 8 | Weather forecast | Done |
-| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | in Progress |
+| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | in Progress (final touches) |
 | 10 | Automation and hardening (scheduled runs, API docs, security review) | Planned |
-| Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | Planned |
-| Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | Planned |
+| Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | in progress 50% done |
+| Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | 10% done |
 
 The **Library** (bookmarks) and **Profile** pages are new in stage 9, with a Profile button next to Log in and Sign up. The **Analysis** and **Updates** pages are still the original "Not built yet" placeholders.
 
