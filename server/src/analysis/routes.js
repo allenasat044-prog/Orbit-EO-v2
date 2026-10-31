@@ -5,6 +5,7 @@ import { HttpError, asyncHandler, sendError } from "../errors.js";
 import { requireAuth } from "../auth/middleware.js";
 import { publicJob } from "../imagery/chipRoutes.js";
 import { pointInGeometry } from "../imagery/geo.js";
+import { chipImageUrl, chipDisplayUrl } from "../imagery/chipUrls.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -22,8 +23,8 @@ const side = (a, prefix) => ({
   acquired_at: a[`${prefix}_acquired_at`],
   platform: a[`${prefix}_platform`],
   cloud_cover: a[`${prefix}_cloud`],
-  image_url: `/api/chips/${a[`${prefix}_chip_id`]}/image`,
-  display_url: `/api/chips/${a[`${prefix}_chip_id`]}/image?variant=display`,
+  image_url: chipImageUrl(a[`${prefix}_chip_id`]),
+  display_url: chipDisplayUrl(a[`${prefix}_chip_id`]),
 });
 
 export const publicAnalysis = (a) => {

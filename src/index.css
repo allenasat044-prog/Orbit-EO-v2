@@ -14,6 +14,7 @@
   --border: oklch(0.922 0 0); --input: oklch(0.922 0 0); --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.32 0 0); --chart-2: oklch(0.88 0 0); --chart-3: oklch(0.55 0 0);
   --chart-4: oklch(0.15 0 0); --chart-5: oklch(0.72 0 0);
+  --file-tree-bg: oklch(0.985 0 0); --file-tree-hover: oklch(0.95 0 0); --folder-icon: oklch(0.45 0.05 250);
 }
 .dark {
   --background: #0d1526; --foreground: #f3f6ff;
@@ -27,6 +28,7 @@
   --border: oklch(1 0 0 / 0.1); --input: oklch(1 0 0 / 0.15); --ring: #8daaff;
   --chart-1: oklch(0.75 0 0); --chart-2: oklch(0.45 0 0); --chart-3: oklch(0.6 0 0);
   --chart-4: oklch(0.9 0 0); --chart-5: oklch(0.35 0 0);
+  --file-tree-bg: oklch(0.17 0.03 262 / 0.65); --file-tree-hover: oklch(1 0 0 / 0.08); --folder-icon: oklch(0.97 0 0);
 }
 @theme inline {
   --color-background: var(--background); --color-foreground: var(--foreground);
@@ -38,6 +40,7 @@
   --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive); --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border); --color-input: var(--input); --color-ring: var(--ring);
+  --color-file-tree-bg: var(--file-tree-bg); --color-file-tree-hover: var(--file-tree-hover); --color-folder-icon: var(--folder-icon);
 }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: system-ui, sans-serif; }
 .orbit-search-input::placeholder { color: #565656; opacity: 1; }

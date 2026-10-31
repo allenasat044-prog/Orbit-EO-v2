@@ -4,8 +4,17 @@ import {
   Cartesian2, Cartesian3, Cartographic, LabelStyle, ScreenSpaceEventHandler, ScreenSpaceEventType, Math as CesiumMath, SingleTileImageryProvider,
 } from "cesium";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts";
+import { useNavigate } from "react-router-dom";
+import {
+  Search, LayoutDashboard, FileText, CloudSun, Image as ImageIcon, Sparkles, GitCompare, History, Maximize, MapPin,
+  RefreshCw, Grid3x3, HelpCircle, LogOut, LogIn, Hash, Bot, PanelLeftClose, PanelLeftOpen, Eye, BookMarked, UserRound, BookmarkPlus,
+} from "lucide-react";
 import SearchGroup from "@/components/ui/v-group-18";
-import { getToken } from "@/lib/auth";
+import { SidebarNav, type NavGroupData, type NavItemData } from "@/components/ui/dashboard-sidebar";
+import { WeatherPopup } from "@/components/ui/weather-popup";
+import { buildWeatherProps } from "@/lib/weather-map";
+import { getToken, logout } from "@/lib/auth";
+import { BookmarkDialog } from "@/components/bookmark-dialog";
 
 type Geometry = { type: string; coordinates: unknown };
 type Item = {
@@ -20,7 +29,7 @@ type Item = {
   id: string | null;
 };
 type Point = { lat: number; lon: number };
-type Chip = { id: string; image_url: string; display_url: string; width_px: number; height_px: number; pin_px: { x: number; y: number }; gsd_m: number | null; label: string };
+type Chip = { id: string; rev: number; image_url: string; display_url: string; width_px: number; height_px: number; pin_px: { x: number; y: number }; gsd_m: number | null; label: string };
 type Caption = { text: string; checkpoint: string; device: string | null; latencyMs: number | null };
 type CompareResult = { model_id: string; name: string; text?: string; latency_ms?: number | null; alignment?: number | null; error?: { message: string } };
 type Comparison = {
@@ -53,9 +62,9 @@ type Forecast = {
   now_index: number | null;
   hourly: {
     time: string[]; temperature_c: Num[]; humidity_pct: Num[]; precipitation_probability_pct: Num[]; precipitation_mm: Num[];
-    cloud_cover_pct: Num[]; wind_speed_kmh: Num[]; wind_gust_kmh: Num[]; summary: string[];
+    cloud_cover_pct: Num[]; wind_speed_kmh: Num[]; wind_gust_kmh: Num[]; weather_code: Num[]; summary: string[];
   };
-  daily: { date: string[]; tmax_c: Num[]; tmin_c: Num[]; precipitation_mm: Num[]; summary: string[] };
+  daily: { date: string[]; tmax_c: Num[]; tmin_c: Num[]; precipitation_mm: Num[]; weather_code: Num[]; summary: string[] };
   source: { attribution: string; url: string };
   cached: boolean;
   fetched_at: string;
@@ -100,6 +109,10 @@ export default function Explore() {
   const [point, setPoint] = useState<Point | null>(null);
   const [chip, setChip] = useState<Chip | null>(null);
   const [chipBusy, setChipBusy] = useState<string | null>(null);
+  const [chipItem, setChipItem] = useState<Item | null>(null);
+  const [chipBroken, setChipBroken] = useState(false);
+  const [refreshBusy, setRefreshBusy] = useState(false);
+  const healed = useRef(new Set<string>());
   const [zoomPx, setZoomPx] = useState(256);
   const [smooth, setSmooth] = useState(true);
   const [caption, setCaption] = useState<Caption | null>(null);
@@ -114,9 +127,18 @@ export default function Explore() {
   const [forecast, setForecast] = useState<Forecast | null>(null);
   const [weatherBusy, setWeatherBusy] = useState(false);
   const [hourIdx, setHourIdx] = useState(0);
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeItem, setActiveItem] = useState<Item | null>(null);
+  const [regionList, setRegionList] = useState<{ id: string; name: string; lat: number; lon: number }[]>([]);
+  const [weatherOpen, setWeatherOpen] = useState(false);
+  const [popupForecast, setPopupForecast] = useState<{ key: string; data: Forecast } | null>(null);
+  const [popupLoading, setPopupLoading] = useState(false);
+  const [popupError, setPopupError] = useState<string | null>(null);
   const [pinName, setPinName] = useState("");
   const [autoCaption, setAutoCaption] = useState(false);
   const [monitorBusy, setMonitorBusy] = useState(false);
+  const [bookmarkOpen, setBookmarkOpen] = useState(false);
   const [runBusy, setRunBusy] = useState(false);
 
   useEffect(() => {
@@ -202,7 +224,7 @@ export default function Explore() {
 
   const closeAnalysis = () => { clearChange(); setAnalysis(null); };
 
-  const closeChip = () => { clearOverlay(); setChip(null); setCaption(null); setComparison(null); };
+  const closeChip = () => { clearOverlay(); setChip(null); setChipItem(null); setChipBroken(false); setCaption(null); setComparison(null); };
 
   const draw = async (list: Item[]) => {
     const v = viewer.current;
@@ -229,7 +251,7 @@ export default function Explore() {
       setCredit([data.attribution?.imagery, data.attribution?.geocoding].filter(Boolean).join(" · "));
       await draw(all);
       const pt: Point | null = data.point ?? (append ? point : null);
-      if (!append) { setPoint(pt); clearOverlay(); clearChange(); setChip(null); setCaption(null); setComparison(null); setAnalysis(null); setBeforeItem(null); setAfterItem(null); setForecast(null); }
+      if (!append) { setPoint(pt); clearOverlay(); clearChange(); setChip(null); setChipItem(null); setChipBroken(false); setCaption(null); setComparison(null); setAnalysis(null); setBeforeItem(null); setAfterItem(null); setForecast(null); setActiveItem(null); }
       const label = pinLabel ?? data.place?.name ?? (pt ? `${pt.lat.toFixed(4)}, ${pt.lon.toFixed(4)}` : "");
       if (!append && pt) { setPinName(label); placePin(pt, label, true); }
       const where = pt ? ` at ${pt.lat.toFixed(4)}, ${pt.lon.toFixed(4)}` : "";
@@ -260,7 +282,8 @@ export default function Explore() {
     if (b) viewer.current?.camera.flyTo({ destination: Rectangle.fromDegrees(b[0], b[1], b[2], b[3]) });
   };
 
-  const previewChip = async (item: Item) => {
+  // refresh = true cuts the preview again from the scene, even if a saved one exists (and rebuilds a saved one whose file is missing).
+  const previewChip = async (item: Item, refresh = false) => {
     const token = getToken();
     if (!token) { setMsg("Log in to preview imagery."); return; }
     if (!point) { setMsg("Drop a pin first: search a place or click the globe."); return; }
@@ -276,8 +299,8 @@ export default function Explore() {
         acqId = d.acquisition.id as string;
         setItems((prev) => prev.map((i) => (i.external_id === item.external_id ? { ...i, ingested: true, id: acqId } : i)));
       }
-      setMsg("Cutting a preview at your pin. The first time for a scene also downloads it, which can take a minute…");
-      const res = await fetch(`/api/imagery/${acqId}/chip`, { method: "POST", headers: auth, body: JSON.stringify({ lat: point.lat, lon: point.lon, size_px: zoomPx }) });
+      setMsg(refresh ? "Cutting a fresh preview at your pin. If the scene file is missing it is downloaded again, which can take a minute…" : "Cutting a preview at your pin. The first time for a scene also downloads it, which can take a minute…");
+      const res = await fetch(`/api/imagery/${acqId}/chip`, { method: "POST", headers: auth, body: JSON.stringify({ lat: point.lat, lon: point.lon, size_px: zoomPx, ...(refresh ? { refresh: true } : {}) }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setMsg(data?.error?.message ?? `Preview failed (${res.status})`); return; }
       let chipId: string | undefined = data.chip?.id;
@@ -299,14 +322,42 @@ export default function Explore() {
       const c = cd.chip;
       setCaption(null);
       setComparison(null);
-      setChip({ id: c.id, image_url: c.image_url, display_url: c.display_url ?? c.image_url, width_px: c.width_px, height_px: c.height_px, pin_px: c.pin_px, gsd_m: c.gsd_m, label: `${new Date(item.acquired_at).toISOString().slice(0, 10)} · ${item.platform ?? item.collection}` });
+      setChipBroken(false);
+      setChipItem(item);
+      setChip({ id: c.id, rev: Date.now(), image_url: c.image_url, display_url: c.display_url ?? c.image_url, width_px: c.width_px, height_px: c.height_px, pin_px: c.pin_px, gsd_m: c.gsd_m, label: `${new Date(item.acquired_at).toISOString().slice(0, 10)} · ${item.platform ?? item.collection}` });
       const ring: number[][] = c.bounds.coordinates[0];
       await showOverlay(c.display_url ?? c.image_url, ring[0][0], ring[2][1], ring[2][0], ring[0][1]);
-      setMsg("Preview placed on the globe at your pin.");
+      setMsg(refresh ? "Fresh preview placed on the globe at your pin." : "Preview placed on the globe at your pin.");
     } catch {
       setMsg("Can't reach the server. Is the backend running on port 3000?");
     } finally {
       setChipBusy(null);
+    }
+  };
+
+  // "Fresh run": look for scenes over the pin again, then cut a new preview instead of showing a saved one.
+  const refreshArea = async () => {
+    if (!point) { setMsg("Drop a pin first: search a place or click the globe."); return; }
+    if (!getToken()) { setMsg("Log in to refresh imagery."); return; }
+    setRefreshBusy(true);
+    try {
+      setMsg("Re-checking this area for scenes…");
+      const params = new URLSearchParams({ lat: point.lat.toFixed(6), lon: point.lon.toFixed(6), cloud_max: "30" });
+      const res = await fetch(`/api/imagery/search?${params}`, { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setMsg(data?.error?.message ?? `Search failed (${res.status})`); return; }
+      const list: Item[] = data.items;
+      setItems(list);
+      setNext(data.next_cursor ?? null);
+      await draw(list);
+      if (!list.length) { setMsg("No scene covers this point in the last 30 days with cloud cover up to 30%."); return; }
+      const target = (chipItem && list.find((i) => i.external_id === chipItem.external_id)) || list[0];
+      setActiveItem(target);
+      await previewChip(target, true);
+    } catch {
+      setMsg("Can't reach the server. Is the backend running on port 3000?");
+    } finally {
+      setRefreshBusy(false);
     }
   };
 
@@ -448,6 +499,95 @@ export default function Explore() {
     }
   };
 
+  const openWeatherPopup = async () => {
+    if (!point) { setMsg("Drop a pin first: search a place or click the globe."); return; }
+    setWeatherOpen(true);
+    const key = `${point.lat.toFixed(2)},${point.lon.toFixed(2)}`;
+    if (popupForecast?.key === key) return;
+    setPopupLoading(true);
+    setPopupError(null);
+    try {
+      const res = await fetch(`/api/weather/forecast?lat=${point.lat.toFixed(4)}&lon=${point.lon.toFixed(4)}&days=7`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setPopupError(data?.error?.message ?? `Could not load the forecast (${res.status})`); return; }
+      setPopupForecast({ key, data });
+    } catch {
+      setPopupError("Can't reach the server. Is the backend running on port 3000?");
+    } finally {
+      setPopupLoading(false);
+    }
+  };
+
+  const loadRegions = async () => {
+    const token = getToken();
+    if (!token) { setRegionList([]); return; }
+    try {
+      const res = await fetch("/api/regions", { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setRegionList((data.items ?? []).map((r: { id: string; name: string; location: { lat: number; lon: number } }) => ({ id: r.id, name: r.name, lat: r.location.lat, lon: r.location.lon })));
+    } catch {
+      setRegionList([]);
+    }
+  };
+
+  const goToRegion = (id: string) => {
+    const r = regionList.find((x) => x.id === id);
+    if (!r) return;
+    const params = new URLSearchParams({ lat: r.lat.toFixed(6), lon: r.lon.toFixed(6), cloud_max: "30" });
+    void run(`/api/imagery/search?${params}`, false, r.name);
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        document.querySelector<HTMLInputElement>("[data-explore-search] input")?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const pickScene = (): Item | null => {
+    const target = activeItem ?? items[0] ?? null;
+    if (!target) setMsg("Search for a place first, then pick a scene.");
+    return target;
+  };
+
+  const onSidebarSelect = (id: string) => {
+    if (id.startsWith("zoom-")) { setZoomPx(Number(id.slice(5))); return; }
+    switch (id) {
+      case "search": document.querySelector<HTMLInputElement>("[data-explore-search] input")?.focus(); break;
+      case "dashboard": navigate("/dashboard"); break;
+      case "captions": navigate("/captions"); break;
+      case "library": navigate("/library"); break;
+      case "profile": navigate("/profile"); break;
+      case "bookmark": bookmarkHere(); break;
+      case "faq": navigate("/faqs"); break;
+      case "login": navigate("/login"); break;
+      case "logout": logout(); navigate("/login"); break;
+      case "weather": void openWeatherPopup(); break;
+      case "preview": { const t = pickScene(); if (t) void previewChip(t); break; }
+      case "refresh": void refreshArea(); break;
+      case "describe": if (!chip) setMsg("Press Preview on a scene first."); else void describeChip(); break;
+      case "compare": if (!chip) setMsg("Press Preview on a scene first."); else void compareModels(); break;
+      case "set-before": { const t = pickScene(); if (t) { setBeforeItem(t); setMsg(`Before: ${t.acquired_at.slice(0, 10)}`); } break; }
+      case "set-after": { const t = pickScene(); if (t) { setAfterItem(t); setMsg(`After: ${t.acquired_at.slice(0, 10)}`); } break; }
+      case "analyse": void analyzeChange(); break;
+      case "monitor": void monitorHere(); break;
+      case "autodescribe": setAutoCaption((v) => !v); break;
+      case "update": void runUpdate(); break;
+      case "pixels": setSmooth((v) => !v); break;
+      default: break;
+    }
+  };
+
+  const bookmarkHere = () => {
+    if (!point) { setMsg("Drop a pin first: search a place or click the globe."); return; }
+    if (!getToken()) { setMsg("Log in to bookmark locations."); return; }
+    setBookmarkOpen(true);
+  };
+
   const monitorHere = async () => {
     const token = getToken();
     if (!point) { setMsg("Drop a pin first: search a place or click the globe."); return; }
@@ -517,12 +657,78 @@ export default function Explore() {
     }
   };
 
+  const token = getToken();
+  const changeCount = (beforeItem ? 1 : 0) + (afterItem ? 1 : 0);
+  const sameScene = (a: Item | null, b: Item | null) => !!a && !!b && a.external_id === b.external_id;
+  const navGroups: NavGroupData[] = [
+    { items: [
+      { id: "search", title: "Search", icon: Search, shortcut: "⌘K" },
+      { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
+      { id: "captions", title: "Captions", icon: FileText },
+      { id: "library", title: "Library", icon: BookMarked },
+      { id: "profile", title: "Profile", icon: UserRound },
+    ] },
+    { heading: "Explore", items: [
+      { id: "weather", title: "Weather forecast", icon: CloudSun, dim: !point },
+      { id: "preview", title: "Preview scene", icon: ImageIcon, badge: items.length || undefined, dim: items.length === 0 },
+      { id: "refresh", title: "Fresh run (re-check area)", icon: RefreshCw, dim: !point },
+      { id: "describe", title: "Describe this image", icon: Sparkles, dim: !chip },
+      { id: "compare", title: "Compare models", icon: GitCompare, dim: !chip },
+      { id: "change", title: "Historical change", icon: History, badge: changeCount ? `${changeCount}/2` : undefined, children: [
+        { id: "set-before", title: "Set scene as Before", icon: Hash, active: sameScene(beforeItem, activeItem ?? items[0] ?? null) },
+        { id: "set-after", title: "Set scene as After", icon: Hash, active: sameScene(afterItem, activeItem ?? items[0] ?? null) },
+        { id: "analyse", title: "Analyse change", icon: Hash, dim: !(beforeItem && afterItem) },
+      ] },
+      { id: "area", title: "Preview area", icon: Maximize, defaultOpen: true, children: ZOOMS.map((z) => ({ id: `zoom-${z.px}`, title: `${z.name} · ${z.km}`, icon: Hash, active: zoomPx === z.px })) },
+    ] },
+    { heading: "Monitoring", items: [
+      { id: "monitor", title: "Monitor this location", icon: MapPin, dim: !point },
+      { id: "bookmark", title: "Bookmark this location", icon: BookmarkPlus, dim: !point },
+      { id: "autodescribe", title: "Describe new scenes", icon: Bot, badge: autoCaption ? "On" : "Off" },
+      { id: "update", title: "Check for new scenes", icon: RefreshCw },
+    ] },
+  ];
+  const bottomItems: NavItemData[] = [
+    { id: "pixels", title: smooth ? "Show pixels" : "Smooth image", icon: Grid3x3, dim: !chip },
+    { id: "faq", title: "FAQ", icon: HelpCircle },
+    token ? { id: "logout", title: "Log out", icon: LogOut } : { id: "login", title: "Log in", icon: LogIn },
+  ];
+  const widget = popupForecast && point && popupForecast.key === `${point.lat.toFixed(2)},${point.lon.toFixed(2)}` ? buildWeatherProps(popupForecast.data, pinName || "Your pin") : null;
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4"><SearchGroup onSearch={onSearch} /><span className="text-sm text-muted-foreground">{msg}</span></div>
+    <div className="flex items-start gap-4">
+      {sidebarOpen && (
+        <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-[260px] shrink-0 overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-sm ring-1 ring-white/5 lg:block" aria-label="Explore tools">
+          <SidebarNav
+            className="border-none bg-transparent"
+            groups={navGroups}
+            bottomItems={bottomItems}
+            onSelect={onSidebarSelect}
+            workspace={{
+              title: "Orbit EO",
+              subtitle: pinName ? `Pin: ${pinName}` : "Satellite explorer",
+              options: regionList.map((r) => ({ id: r.id, label: r.name })),
+              emptyText: token ? "No monitored locations yet" : "Log in to see monitored locations",
+              onOpen: () => void loadRegions(),
+              onPick: goToRegion,
+              action: { label: "Monitor this location", onClick: () => void monitorHere() },
+            }}
+          />
+        </aside>
+      )}
+      <div className="min-w-0 flex-1 space-y-4">
+      <div className="flex items-center gap-4" data-explore-search>
+        <button type="button" onClick={() => setSidebarOpen((v) => !v)} aria-label={sidebarOpen ? "Hide tools panel" : "Show tools panel"} className="hidden rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground lg:inline-flex">
+          {sidebarOpen ? <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={1.5} /> : <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />}
+        </button>
+        <SearchGroup onSearch={onSearch} /><span className="text-sm text-muted-foreground">{msg}</span>
+      </div>
       <div ref={el} className="h-[70vh] w-full overflow-hidden rounded-2xl border border-white/10" />
       {point && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
+          <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void refreshArea()} title="Search for scenes over the pin again and cut a brand-new preview, even if one is already saved" className="flex items-center gap-1.5 rounded-md border border-[#8daaff]/50 bg-[#8daaff]/10 px-2 py-1 text-xs font-medium text-[#8daaff] disabled:text-muted-foreground">
+            <RefreshCw className={`size-3 ${refreshBusy ? "animate-spin" : ""}`} />{refreshBusy ? "Refreshing…" : "Fresh run: re-check area"}
+          </button>
           <button type="button" disabled={monitorBusy} onClick={() => void monitorHere()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
             {monitorBusy ? "Saving…" : "Monitor this location"}
           </button>
@@ -530,8 +736,14 @@ export default function Explore() {
             <input type="checkbox" checked={autoCaption} onChange={(e) => setAutoCaption(e.target.checked)} />
             also describe new scenes
           </label>
+          <button type="button" onClick={bookmarkHere} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
+            Bookmark this location
+          </button>
+          <button type="button" onClick={() => void openWeatherPopup()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
+            Weather widget
+          </button>
           <button type="button" disabled={weatherBusy} onClick={() => void loadWeather()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
-            {weatherBusy ? "Loading…" : "Weather forecast"}
+            {weatherBusy ? "Loading…" : "Weather chart"}
           </button>
           <button type="button" disabled={analysisBusy || !beforeItem || !afterItem} onClick={() => void analyzeChange()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
             {analysisBusy ? "Analysing…" : "Analyse change"}
@@ -610,8 +822,8 @@ export default function Explore() {
       {items.length > 0 && (
         <ul className="max-h-60 space-y-1 overflow-auto text-sm">
           {items.map((i) => (
-            <li key={i.external_id} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 px-3 py-2">
-              <button type="button" className="text-left hover:text-[#8daaff]" onClick={() => focus(i)}>
+            <li key={i.external_id} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${activeItem?.external_id === i.external_id ? "border-[#8daaff]/50" : "border-white/10"}`}>
+              <button type="button" className="text-left hover:text-[#8daaff]" onClick={() => { focus(i); setActiveItem(i); }}>
                 {new Date(i.acquired_at).toISOString().slice(0, 10)} · {i.platform ?? i.collection} · {i.cloud_cover != null ? `${i.cloud_cover.toFixed(0)}% cloud` : "no cloud data"}{i.gsd ? ` · ${i.gsd} m` : ""}
               </button>
               <span className="flex items-center gap-3">
@@ -633,6 +845,7 @@ export default function Explore() {
           <div className="flex items-center justify-between text-sm">
             <span>{chip.label} · {chip.width_px}×{chip.height_px} px{chip.gsd_m ? ` · ${chip.gsd_m} m/px` : ""}</span>
             <span className="flex items-center gap-3">
+              <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void (chipItem ? previewChip(chipItem, true) : refreshArea())} title="Cut this preview again from the scene" className="text-xs text-[#8daaff] disabled:text-muted-foreground">{chipBusy !== null || refreshBusy ? "Refreshing…" : "Refresh image"}</button>
               <button type="button" disabled={captionBusy} onClick={() => void describeChip()} className="text-xs text-[#8daaff] disabled:text-muted-foreground">{captionBusy ? "Describing…" : "Describe this image"}</button>
               <button type="button" disabled={compareBusy} onClick={() => void compareModels()} className="text-xs text-[#8daaff] disabled:text-muted-foreground">{compareBusy ? "Comparing…" : "Compare models"}</button>
               <button type="button" onClick={() => setSmooth((v) => !v)} className="text-xs text-[#8daaff]">{smooth ? "Show pixels" : "Smooth"}</button>
@@ -640,12 +853,22 @@ export default function Explore() {
             </span>
           </div>
           <div className="relative inline-block w-full max-w-[512px]">
-            <img src={smooth ? chip.display_url : chip.image_url} alt="Satellite preview at the pin" width={chip.width_px} height={chip.height_px} className="block w-full max-w-[512px] rounded-lg" style={{ imageRendering: smooth ? "auto" : "pixelated" }} />
+            <img key={chip.rev} src={smooth ? chip.display_url : chip.image_url} alt="Satellite preview at the pin"
+              onError={() => {
+                // A saved preview whose file is gone: rebuild it once automatically, then ask.
+                if (chipItem && !healed.current.has(chip.id)) { healed.current.add(chip.id); setMsg("This saved image was missing. Rebuilding it…"); void previewChip(chipItem, true); }
+                else setChipBroken(true);
+              }} width={chip.width_px} height={chip.height_px} className="block w-full max-w-[512px] rounded-lg" style={{ imageRendering: smooth ? "auto" : "pixelated" }} />
             <span
               className="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-red-500"
               style={{ left: `${(chip.pin_px.x / chip.width_px) * 100}%`, top: `${(chip.pin_px.y / chip.height_px) * 100}%` }}
             />
           </div>
+          {chipBroken && (
+            <p role="alert" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
+              This saved image could not be loaded, even after trying to rebuild it. Press “Refresh image” to cut it again. If that fails, check that the API and the ML service are running.
+            </p>
+          )}
           {caption && (
             <div className="space-y-1 rounded-lg border border-white/10 p-3 text-sm">
               <p>{caption.text}</p>
@@ -731,6 +954,23 @@ export default function Explore() {
       )}
       {next && <button type="button" disabled={busy} onClick={loadMore} className="text-sm text-[#8daaff] disabled:text-muted-foreground">Load more</button>}
       {credit && <p className="text-xs text-muted-foreground">{credit}</p>}
+      <WeatherPopup
+        open={weatherOpen}
+        onClose={() => setWeatherOpen(false)}
+        loading={popupLoading}
+        error={popupError}
+        widget={widget}
+        attribution={popupForecast ? { text: popupForecast.data.source.attribution, url: popupForecast.data.source.url } : null}
+      />
+      {bookmarkOpen && point && (
+        <BookmarkDialog
+          open
+          onOpenChange={setBookmarkOpen}
+          defaults={{ title: (pinName || `${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}`).slice(0, 120), lat: Number(point.lat.toFixed(6)), lon: Number(point.lon.toFixed(6)) }}
+          onSaved={(b) => setMsg(`Bookmarked "${b.title}". Find it under Library.`)}
+        />
+      )}
+      </div>
     </div>
   );
 }

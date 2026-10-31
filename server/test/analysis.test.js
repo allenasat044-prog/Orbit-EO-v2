@@ -182,7 +182,7 @@ test("GET /analysis/:id returns scenes, bounds, measured results and honest cave
   s.close();
   const a = r.analysis;
   assert.deepEqual(a.bounds, { west: 77.19, north: 28.61, east: 77.21, south: 28.59 });
-  assert.equal(a.before.display_url, "/api/chips/b0000000-0000-4000-8000-000000000001/image?variant=display");
+  assert.equal(a.before.display_url, "/api/chips/b0000000-0000-4000-8000-000000000001/image?variant=display&v=2");
   assert.equal(a.after.platform, "sentinel-2b");
   assert.equal(a.results.changed_area_ha, 4.8);
   assert.equal(a.overlay_url, `/api/analysis/${s.row.id}/overlay`);

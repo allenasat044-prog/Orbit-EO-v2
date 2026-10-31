@@ -983,11 +983,12 @@ var stories = {
   "For business": { title: "Your business. On the move.", paragraphs: ["Orders heading out. Supplies coming in. A thoughtful delivery experience connects both sides of your business.", "Orbit Delivery puts the people behind every parcel at the heart of the journey."] },
   "Our story": { title: "Every parcel brings us closer.", paragraphs: ["A gift for someone far away. An order someone has been waiting for. An everyday essential, right at the door.", "Orbit Delivery is built around a simple idea: what we carry matters, and so does how we get it there."] }
 };
-var NAV = [["Home", "/"], ["Explore", "/explore"], ["Captions", "/captions"], ["Analysis", "/analysis"], ["Dashboard", "/dashboard"], ["FAQ", "/faqs"]];
+var NAV = [["Home", "/"], ["Explore", "/explore"], ["Captions", "/captions"], ["Library", "/library"], ["Analysis", "/analysis"], ["Dashboard", "/dashboard"], ["FAQ", "/faqs"]];
 var NAV_ICONS = {
   "/": <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></>,
   "/explore": <><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></>,
   "/captions": <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+  "/library": <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />,
   "/analysis": <><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></>,
   "/dashboard": <><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></>,
   "/faqs": <><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></>
@@ -1072,7 +1073,11 @@ function App({ onNavigate }) {
     <header className="site-header">
       <a href="./" className="wordmark" aria-label="Orbit Delivery home"><svg viewBox="0 0 38 38" aria-hidden="true"><defs><radialGradient id="logo-light" cx="30%" cy="20%"><stop stopColor="#7d9efa" /><stop offset="1" stopColor="#4674e9" /></radialGradient></defs><circle cx="23" cy="15" r="14" fill="url(#logo-light)" /><circle cx="10" cy="27" r="8" fill="#6389f0" /><circle cx="15" cy="8" r="3.5" fill="#b2c7ff" opacity=".45" /></svg><span className="brand-type">orbit<small>EARTH OBSERVATION</small></span></a>
       <nav aria-label="Main navigation">{NAV.map(([label, path]) => <button key={path} className={path === "/" ? "active" : ""} onClick={() => onNavigate?.(path)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{NAV_ICONS[path]}</svg>{label}</button>)}</nav>
-      <button className="header-cta" onClick={() => onNavigate?.("/explore")}>Launch explorer</button>
+      <div className="header-actions">
+        <button className="header-link header-profile" aria-label="Profile" onClick={() => onNavigate?.("/profile")}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>Profile</button>
+        <button className="header-link header-login" onClick={() => onNavigate?.("/login")}>Log in</button>
+        <button className="header-signup" onClick={() => onNavigate?.("/signup")}>Sign up</button>
+      </div>
     </header>
     <main><section className="hero" aria-labelledby="hero-title">
       <div className="hero-copy">
@@ -1186,6 +1191,16 @@ var css = `@font-face{font-family:'Orbit DM Sans';font-style:normal;font-weight:
 .orbit-delivery .wordmark{color:var(--orbit-ink)}
 .orbit-delivery h1{font-family:inherit}
 .orbit-delivery button:disabled{opacity:1}
+.orbit-delivery .site-header{gap:18px}.orbit-delivery .site-header nav{position:static;left:auto;transform:none;flex:1;justify-content:center;min-width:0}
+.orbit-delivery .header-actions{display:flex;align-items:center;gap:6px;flex:none}
+.orbit-delivery .header-link{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;font-size:14px;color:var(--orbit-nav);transition:background .2s,color .2s}
+.orbit-delivery .header-link svg{width:17px;height:17px}.orbit-delivery .header-link:hover{background:#ffffff12;color:#fff}
+.orbit-delivery .header-profile{border:1px solid #ffffff26}
+.orbit-delivery .header-signup{background:#fff;color:#0b1020;border-radius:12px;padding:10px 16px;font-size:14px;font-weight:500;transition:opacity .2s}.orbit-delivery .header-signup:hover{opacity:.9}
+@media(max-width:1500px){.orbit-delivery .site-header nav button svg{display:none}.orbit-delivery .site-header nav button{padding:10px 12px}}
+@media(max-width:1250px){.orbit-delivery .header-login{display:none}.orbit-delivery .site-header nav button{padding:10px 9px;font-size:13px}}
+@media(max-width:980px){.orbit-delivery .site-header nav{display:none}.orbit-delivery .header-actions{margin-left:auto}}
+@media(max-width:759px){.orbit-delivery .header-profile{font-size:0;gap:0;padding:10px}.orbit-delivery .header-signup{padding:10px 14px;font-size:13px}}
 `;
 function OrbitDeliveryHero({ theme = "auto", assetBaseUrl = "https://cdn.jsdelivr.net/gh/fadeichev2121/planet@b3f70fbf4b577845b1d9d5947c9410fb4d925dae", onNavigate }) {
   return <AssetBaseContext.Provider value={assetBaseUrl.replace(/\/$/, "") + "/"}><div className="orbit-delivery" data-theme={theme}><style>{css}</style><App onNavigate={onNavigate} /></div></AssetBaseContext.Provider>;

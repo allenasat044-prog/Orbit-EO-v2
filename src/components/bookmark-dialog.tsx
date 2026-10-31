@@ -1,0 +1,160 @@
+"use client";
+
+import { useEffect, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { api, type Bookmark, type ListItem } from "@/lib/library";
+
+export type BookmarkDefaults = {
+  title: string;
+  note?: string;
+  lat?: number | null;
+  lon?: number | null;
+  caption_id?: string;
+  list_id?: string;
+};
+
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Pass a bookmark to edit it; leave out to add a new one. */
+  bookmark?: Bookmark;
+  defaults?: BookmarkDefaults;
+  onSaved?: (b: Bookmark) => void;
+};
+
+const field = "rounded-lg border border-input focus-visible:ring-2 focus-visible:ring-ring";
+const NEW_FOLDER = "__new__";
+
+/** Add or edit a bookmark. Like a browser's bookmark box, it asks where to save it. */
+export function BookmarkDialog({ open, onOpenChange, bookmark, defaults, onSaved }: Props) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <BookmarkForm bookmark={bookmark} defaults={defaults} onClose={() => onOpenChange(false)} onSaved={onSaved} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Bookmark; defaults?: BookmarkDefaults; onClose: () => void; onSaved?: (b: Bookmark) => void }) {
+  const id = useId();
+  const editing = Boolean(bookmark);
+  const [folders, setFolders] = useState<ListItem[]>([]);
+  const [foldersLoaded, setFoldersLoaded] = useState(false);
+  const [title, setTitle] = useState(bookmark?.title ?? defaults?.title ?? "");
+  const [note, setNote] = useState(bookmark?.note ?? defaults?.note ?? "");
+  const [lat, setLat] = useState(bookmark?.location ? String(bookmark.location.lat) : defaults?.lat != null ? String(defaults.lat) : "");
+  const [lon, setLon] = useState(bookmark?.location ? String(bookmark.location.lon) : defaults?.lon != null ? String(defaults.lon) : "");
+  const [folder, setFolder] = useState(bookmark?.list_id ?? defaults?.list_id ?? "");
+  const [newFolder, setNewFolder] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const hasCaption = Boolean(bookmark?.caption || defaults?.caption_id);
+
+  useEffect(() => {
+    let live = true;
+    void api<{ items: ListItem[] }>("GET", "/api/library/lists").then((r) => {
+      if (!live) return;
+      if (r.ok) setFolders(r.data.items);
+      else setError(r.error);
+      setFoldersLoaded(true);
+    });
+    return () => { live = false; };
+  }, []);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!title.trim()) return setError("Please give the bookmark a name.");
+    let latN: number | null = null;
+    let lonN: number | null = null;
+    if (lat.trim() || lon.trim()) {
+      latN = Number(lat);
+      lonN = Number(lon);
+      if (!lat.trim() || !lon.trim() || Number.isNaN(latN) || Number.isNaN(lonN)) return setError("Enter both latitude and longitude as numbers, or leave both empty.");
+      if (latN < -90 || latN > 90) return setError("Latitude must be between -90 and 90.");
+      if (lonN < -180 || lonN > 180) return setError("Longitude must be between -180 and 180.");
+    }
+    if (folder === NEW_FOLDER && !newFolder.trim()) return setError("Type a name for the new folder.");
+
+    setBusy(true);
+    let listId: string | null = folder && folder !== NEW_FOLDER ? folder : null;
+    if (folder === NEW_FOLDER) {
+      const f = await api<{ list: ListItem }>("POST", "/api/library/lists", { name: newFolder.trim() });
+      if (!f.ok) { setBusy(false); return setError(f.status === 409 ? "You already have a folder with that name. Pick it from the list instead." : f.error); }
+      listId = f.data.list.id;
+    }
+
+    const r = editing
+      ? await api<{ bookmark: Bookmark }>("PATCH", `/api/library/bookmarks/${bookmark!.id}`, { title: title.trim(), note, lat: latN, lon: lonN, list_id: listId })
+      : await api<{ bookmark: Bookmark }>("POST", "/api/library/bookmarks", {
+          title: title.trim(), note, list_id: listId,
+          ...(latN != null ? { lat: latN, lon: lonN } : {}),
+          ...(defaults?.caption_id ? { caption_id: defaults.caption_id } : {}),
+        });
+    setBusy(false);
+    if (!r.ok) return setError(r.status === 409 ? "You already bookmarked this one." : r.error);
+    onSaved?.(r.data.bookmark);
+    onClose();
+  };
+
+  return (
+    <form onSubmit={(e) => void submit(e)} className="grid gap-4">
+      <DialogHeader>
+        <DialogTitle>{editing ? "Edit bookmark" : "Add bookmark"}</DialogTitle>
+        <DialogDescription>{editing ? "Change the details or move it to another folder." : "Choose where to save it."}</DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${id}-title`}>Name</Label>
+        <Input id={`${id}-title`} className={field} value={title} maxLength={120} autoFocus onChange={(e) => setTitle(e.target.value)} required />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${id}-folder`}>Folder</Label>
+        <select
+          id={`${id}-folder`}
+          value={folder}
+          onChange={(e) => setFolder(e.target.value)}
+          className={`${field} h-10 w-full bg-background px-3 text-sm [color-scheme:dark]`}
+          disabled={!foldersLoaded}
+        >
+          <option value="">Unsorted (no folder)</option>
+          {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          <option value={NEW_FOLDER}>＋ New folder…</option>
+        </select>
+        {folder === NEW_FOLDER && (
+          <Input aria-label="New folder name" className={field} placeholder="New folder name" value={newFolder} maxLength={60} autoFocus onChange={(e) => setNewFolder(e.target.value)} />
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor={`${id}-lat`}>Latitude</Label>
+          <Input id={`${id}-lat`} className={field} inputMode="decimal" placeholder="28.6129" value={lat} onChange={(e) => setLat(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${id}-lon`}>Longitude</Label>
+          <Input id={`${id}-lon`} className={field} inputMode="decimal" placeholder="77.2295" value={lon} onChange={(e) => setLon(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${id}-note`}>Note</Label>
+        <Textarea id={`${id}-note`} value={note} maxLength={2000} placeholder="Optional" onChange={(e) => setNote(e.target.value)} />
+      </div>
+
+      {hasCaption && <p className="text-xs text-muted-foreground">Saved together with its satellite preview and AI caption.</p>}
+      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+
+      <DialogFooter>
+        <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+        <Button type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Save changes" : "Save"}</Button>
+      </DialogFooter>
+    </form>
+  );
+}
