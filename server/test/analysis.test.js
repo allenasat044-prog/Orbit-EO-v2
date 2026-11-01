@@ -146,7 +146,7 @@ function routes(rowOver = {}) {
     routers: [{ path: "/api", router: createAnalysisRouter({
       config, storage,
       acquisitions: { findById: async (id) => accs.get(id) ?? null },
-      analyses: { findById: async (id) => (id === row.id ? row : null) },
+      analyses: { findById: async (id) => (id === row.id ? row : null), listForUser: async (userId) => (userId === "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" ? [row] : []) },
       runner: { enqueue: async (type, params, userId) => { const j = { id: crypto.randomUUID(), type, params, status: "queued", attempts: 0, created_by: userId }; enqueued.push(j); return j; } },
     }) }],
   }).listen(0);
@@ -207,3 +207,19 @@ test("the change overlay is served as a PNG, and a missing overlay or file gives
   assert.equal(bytes.length, 8);
   assert.deepEqual([gone.status, none.status], [404, 404]);
 });
+
+test("GET /analysis lists only my analyses, newest first, and needs login", async () => {
+  const s = routes();
+  const anon = await fetch(`${s.base}/api/analysis`);
+  const mine = await (await fetch(`${s.base}/api/analysis`, { headers: { Authorization: `Bearer ${tok()}` } })).json();
+  const other = jwt.sign({ role: "user" }, config.jwtSecret, { subject: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" });
+  const theirs = await (await fetch(`${s.base}/api/analysis`, { headers: { Authorization: `Bearer ${other}` } })).json();
+  s.close();
+  assert.equal(anon.status, 401);
+  assert.equal(mine.items.length, 1);
+  assert.equal(mine.items[0].id, s.row.id);
+  assert.equal(mine.items[0].after.platform, "sentinel-2b");
+  assert.equal("created_by" in mine.items[0], false);
+  assert.deepEqual(theirs.items, []);
+});
+

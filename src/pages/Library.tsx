@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookmarkPlus, ExternalLink, FolderPlus, Pencil, Search, Trash2 } from "lucide-react";
+import { BarChart3, BookmarkPlus, ExternalLink, FolderPlus, Merge, Pencil, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileTree, type FileNode } from "@/components/ui/file-tree";
@@ -18,6 +18,7 @@ export default function Library() {
   const [items, setItems] = useState<Bookmark[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<string | null>(null); // "f:<folder id>" or "b:<bookmark id>"
   const [bookmarkDialog, setBookmarkDialog] = useState<{ bookmark?: Bookmark; listId?: string } | null>(null);
@@ -63,6 +64,12 @@ export default function Library() {
     setSel(null);
     void load();
   };
+  const mergeDuplicates = async () => {
+    const r = await api<{ removed: number; places: number }>("POST", "/api/library/bookmarks/merge-duplicates");
+    if (!r.ok) return setError(r.error);
+    setNotice(r.data.removed ? `Merged ${r.data.removed} duplicate bookmark${r.data.removed === 1 ? "" : "s"} into ${r.data.places} place${r.data.places === 1 ? "" : "s"}.` : "No duplicate places found. Every place is bookmarked once.");
+    void load();
+  };
   const removeFolder = async (f: ListItem) => {
     if (!window.confirm(`Delete the folder “${f.name}”? Its bookmarks are kept and moved to Unsorted.`)) return;
     const r = await api("DELETE", `/api/library/lists/${f.id}`);
@@ -92,11 +99,13 @@ export default function Library() {
           <Input aria-label="Search bookmarks" className="rounded-lg border border-input pl-9 focus-visible:ring-2 focus-visible:ring-ring" placeholder="Search bookmarks…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" onClick={() => void mergeDuplicates()} title="One bookmark per place: merge bookmarks that are at the same place"><Merge className="size-4" />Merge duplicates</Button>
           <Button variant="outline" onClick={() => setFolderDialog({})}><FolderPlus className="size-4" />New folder</Button>
           <Button onClick={() => setBookmarkDialog({ listId: selFolder?.id })}><BookmarkPlus className="size-4" />Add bookmark</Button>
         </div>
       </div>
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {notice && <p role="status" className="text-sm text-emerald-400">{notice}</p>}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_1fr]">
         <FileTree
@@ -136,6 +145,11 @@ export default function Library() {
                     {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                   </select>
                 </label>
+                {selBookmark.location && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/analysis?lat=${selBookmark.location.lat}&lon=${selBookmark.location.lon}&name=${encodeURIComponent(selBookmark.title)}`}><BarChart3 className="size-4" />Analyse this place</Link>
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={() => setBookmarkDialog({ bookmark: selBookmark })}><Pencil className="size-4" />Edit</Button>
                 <Button variant="outline" size="sm" onClick={() => void removeBookmark(selBookmark)}><Trash2 className="size-4" />Delete</Button>
               </div>

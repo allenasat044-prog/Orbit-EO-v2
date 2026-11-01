@@ -29,7 +29,11 @@ type Props = {
 const field = "rounded-lg border border-input focus-visible:ring-2 focus-visible:ring-ring";
 const NEW_FOLDER = "__new__";
 
-/** Add or edit a bookmark. Like a browser's bookmark box, it asks where to save it. */
+/**
+ * Add or edit a bookmark. Like a browser's bookmark box, it asks where to save it.
+ * There is one bookmark per place: if this place is already bookmarked, the existing one opens for editing
+ * (and gets this caption, if it had none) instead of making a second one.
+ */
 export function BookmarkDialog({ open, onOpenChange, bookmark, defaults, onSaved }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,20 +44,40 @@ export function BookmarkDialog({ open, onOpenChange, bookmark, defaults, onSaved
   );
 }
 
+const coord = (n: number | null | undefined) => (n == null ? "" : String(n));
+
 function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Bookmark; defaults?: BookmarkDefaults; onClose: () => void; onSaved?: (b: Bookmark) => void }) {
   const id = useId();
-  const editing = Boolean(bookmark);
+  // The bookmark being edited. For "Add", it becomes the existing bookmark if this place is already saved.
+  const [target, setTarget] = useState<Bookmark | undefined>(bookmark);
+  const [notice, setNotice] = useState("");
   const [folders, setFolders] = useState<ListItem[]>([]);
   const [foldersLoaded, setFoldersLoaded] = useState(false);
   const [title, setTitle] = useState(bookmark?.title ?? defaults?.title ?? "");
   const [note, setNote] = useState(bookmark?.note ?? defaults?.note ?? "");
-  const [lat, setLat] = useState(bookmark?.location ? String(bookmark.location.lat) : defaults?.lat != null ? String(defaults.lat) : "");
-  const [lon, setLon] = useState(bookmark?.location ? String(bookmark.location.lon) : defaults?.lon != null ? String(defaults.lon) : "");
+  const [lat, setLat] = useState(bookmark?.location ? String(bookmark.location.lat) : coord(defaults?.lat));
+  const [lon, setLon] = useState(bookmark?.location ? String(bookmark.location.lon) : coord(defaults?.lon));
   const [folder, setFolder] = useState(bookmark?.list_id ?? defaults?.list_id ?? "");
   const [newFolder, setNewFolder] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const hasCaption = Boolean(bookmark?.caption || defaults?.caption_id);
+  const editing = Boolean(target);
+  const caption = target?.caption ?? null;
+  const addingCaption = Boolean(defaults?.caption_id && target && !target.caption);
+  const hasCaption = Boolean(caption || defaults?.caption_id);
+
+  // Switch to the bookmark that is already at this place.
+  const adopt = (b: Bookmark) => {
+    setTarget(b);
+    setTitle(b.title);
+    setNote([b.note, defaults?.note && !b.note.includes(defaults.note) ? defaults.note : ""].filter(Boolean).join("\n\n"));
+    setLat(b.location ? String(b.location.lat) : "");
+    setLon(b.location ? String(b.location.lon) : "");
+    setFolder(defaults?.list_id || b.list_id || "");
+    const parts = [`You already bookmarked this place as “${b.title}”, so you are editing that bookmark instead of making a second one.`];
+    if (defaults?.caption_id) parts.push(b.caption ? "It already has a caption, which is kept." : "This caption will be added to it.");
+    setNotice(parts.join(" "));
+  };
 
   useEffect(() => {
     let live = true;
@@ -63,7 +87,14 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
       else setError(r.error);
       setFoldersLoaded(true);
     });
+    // Adding a bookmark at a known place: is it already saved?
+    if (!bookmark && defaults?.lat != null && defaults?.lon != null) {
+      void api<{ bookmark: Bookmark | null }>("GET", `/api/library/bookmarks/nearby?lat=${defaults.lat}&lon=${defaults.lon}`).then((r) => {
+        if (live && r.ok && r.data.bookmark) adopt(r.data.bookmark);
+      });
+    }
     return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -89,15 +120,22 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
       listId = f.data.list.id;
     }
 
-    const r = editing
-      ? await api<{ bookmark: Bookmark }>("PATCH", `/api/library/bookmarks/${bookmark!.id}`, { title: title.trim(), note, lat: latN, lon: lonN, list_id: listId })
+    const r = target
+      ? await api<{ bookmark: Bookmark }>("PATCH", `/api/library/bookmarks/${target.id}`, {
+          title: title.trim(), note, lat: latN, lon: lonN, list_id: listId,
+          ...(addingCaption ? { caption_id: defaults!.caption_id } : {}),
+        })
       : await api<{ bookmark: Bookmark }>("POST", "/api/library/bookmarks", {
           title: title.trim(), note, list_id: listId,
           ...(latN != null ? { lat: latN, lon: lonN } : {}),
           ...(defaults?.caption_id ? { caption_id: defaults.caption_id } : {}),
         });
     setBusy(false);
-    if (!r.ok) return setError(r.status === 409 ? "You already bookmarked this one." : r.error);
+    if (!r.ok) {
+      // Someone (or another tab) saved this place meanwhile, or the typed coordinates are an existing place.
+      if (r.status === 409 && r.body?.bookmark) { adopt(r.body.bookmark as Bookmark); return; }
+      return setError(r.error);
+    }
     onSaved?.(r.data.bookmark);
     onClose();
   };
@@ -108,6 +146,8 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
         <DialogTitle>{editing ? "Edit bookmark" : "Add bookmark"}</DialogTitle>
         <DialogDescription>{editing ? "Change the details or move it to another folder." : "Choose where to save it."}</DialogDescription>
       </DialogHeader>
+
+      {notice && <p role="status" className="rounded-lg border border-[#8daaff]/30 bg-[#8daaff]/10 p-3 text-xs text-[#cfe0ff]">{notice}</p>}
 
       <div className="space-y-2">
         <Label htmlFor={`${id}-title`}>Name</Label>
@@ -148,7 +188,7 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
         <Textarea id={`${id}-note`} value={note} maxLength={2000} placeholder="Optional" onChange={(e) => setNote(e.target.value)} />
       </div>
 
-      {hasCaption && <p className="text-xs text-muted-foreground">Saved together with its satellite preview and AI caption.</p>}
+      {hasCaption && <p className="text-xs text-muted-foreground">{caption ? "This place keeps its satellite preview and AI caption." : "Saved together with its satellite preview and AI caption."}</p>}
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
 
       <DialogFooter>

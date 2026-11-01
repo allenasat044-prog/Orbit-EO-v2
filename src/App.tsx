@@ -10,6 +10,7 @@ import AuthCallback from "@/pages/AuthCallback";
 import ContactWithGlobe from "@/components/ui/contact-with-globe";
 import Faqs from "@/pages/Faqs";
 import Library from "@/pages/Library";
+import Analysis from "@/pages/Analysis";
 import Profile from "@/pages/Profile";
 import ErrorBoundary from "@/components/error-boundary";
 
@@ -31,7 +32,7 @@ export default function App() {
         <Route path="/captions" element={page("Captions", <Captions />)} />
         <Route path="/library" element={page("Bookmarks", <Library />)} />
         <Route path="/profile" element={page("Profile", <Profile />)} />
-        <Route path="/analysis" element={page("Analysis", <ComingSoon api="POST /api/analysis/compare" />)} />
+        <Route path="/analysis" element={page("Analysis", <Analysis />)} />
         <Route path="/updates" element={page("Updates", <ComingSoon api="GET /api/updates/status, /api/updates/history" />)} />
         <Route path="/dashboard" element={page("Dashboard", <Dashboard />)} />
       </Routes>

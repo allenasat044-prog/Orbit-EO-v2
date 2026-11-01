@@ -50,6 +50,7 @@ const bookmarkPatch = z.object({
   lat: z.number().min(-90).max(90).nullable().optional(),
   lon: z.number().min(-180).max(180).nullable().optional(),
   list_id: uuid.nullable().optional(),
+  caption_id: uuid.optional(),
   label_ids: z.array(uuid).max(10).optional(),
 }).strict();
 
@@ -207,8 +208,27 @@ export function createLibraryRouter({ config, library, users }) {
     }
     if ((lat == null) !== (lon == null)) throw new HttpError(400, "validation_error", "lat and lon must be given together.");
     if (!title) throw new HttpError(400, "validation_error", "title: title is required");
+    // One bookmark per place: point the caller at the one that is already there.
+    const dup = (body.caption_id && (await library.findBookmarkByCaption(userId, body.caption_id))) || (lat != null && (await library.findNearbyBookmark(userId, lat, lon)));
+    if (dup) return duplicate(res, dup);
     const row = await library.createBookmark(userId, { title, note: body.note, lat, lon, caption_id: body.caption_id ?? null, list_id: body.list_id ?? null, label_ids });
     res.status(201).json({ bookmark: publicBookmark(row) });
+  }));
+
+  const duplicate = (res, existing) =>
+    res.status(409).json({
+      error: { code: "duplicate_location", message: "You already have a bookmark at this place. Edit that one instead." },
+      bookmark: publicBookmark(existing),
+    });
+
+  router.get("/library/bookmarks/nearby", auth, guard(async (req, res) => {
+    const q = check(z.object({ lat: z.coerce.number().min(-90).max(90), lon: z.coerce.number().min(-180).max(180) }), req.query);
+    const found = await library.findNearbyBookmark(req.auth.userId, q.lat, q.lon);
+    res.json({ bookmark: found ? publicBookmark(found) : null });
+  }));
+
+  router.post("/library/bookmarks/merge-duplicates", auth, guard(async (req, res) => {
+    res.json(await library.mergeDuplicates(req.auth.userId));
   }));
 
   const ownedBookmark = async (req) => {
@@ -224,6 +244,19 @@ export function createLibraryRouter({ config, library, users }) {
     if (patch.list_id) await verifyRefs(req.auth.userId, { list_id: patch.list_id });
     if ((patch.lat === undefined) !== (patch.lon === undefined)) throw new HttpError(400, "validation_error", "lat and lon must be changed together.");
     if ((patch.lat === null) !== (patch.lon === null)) throw new HttpError(400, "validation_error", "lat and lon must both be null or both set.");
+    if (patch.caption_id) {
+      // Adds a caption to a bookmark that has none; a bookmark that already has one keeps it.
+      if (row.caption_id) delete patch.caption_id;
+      else {
+        if (!(await library.captionForUser(req.auth.userId, patch.caption_id))) throw new HttpError(404, "not_found", "Caption not found.");
+        const taken = await library.findBookmarkByCaption(req.auth.userId, patch.caption_id, row.id);
+        if (taken) return duplicate(res, taken);
+      }
+    }
+    if (patch.lat != null) {
+      const clash = await library.findNearbyBookmark(req.auth.userId, patch.lat, patch.lon, row.id);
+      if (clash) return duplicate(res, clash);
+    }
     res.json({ bookmark: publicBookmark(await library.updateBookmark(row.id, patch)) });
   }));
 

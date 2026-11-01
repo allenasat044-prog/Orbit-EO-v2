@@ -71,6 +71,15 @@ export function createAnalysisRouter({ config, acquisitions, analyses, runner, s
     }),
   );
 
+  // My past analyses, newest first (the "history" on the Analysis page).
+  router.get(
+    "/analysis",
+    auth,
+    asyncHandler(async (req, res) => {
+      res.json({ items: (await analyses.listForUser(req.auth.userId, 30)).map(publicAnalysis) });
+    }),
+  );
+
   router.get(
     "/analysis/:id",
     asyncHandler(async (req, res) => {

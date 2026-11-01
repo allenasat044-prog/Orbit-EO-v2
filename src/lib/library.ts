@@ -31,7 +31,7 @@ export type Records = {
 };
 
 // Not a discriminated union on purpose: this project compiles with strict:false, where narrowing on `ok` does not work.
-export type ApiResult<T> = { ok: boolean; status: number; error: string; data: T };
+export type ApiResult<T> = { ok: boolean; status: number; error: string; data: T; /** The raw error answer, when the server sent extra details (for example the existing bookmark). */ body?: any };
 
 export async function api<T = unknown>(method: string, path: string, body?: unknown, auth = true): Promise<ApiResult<T>> {
   const token = getToken();
@@ -45,7 +45,7 @@ export async function api<T = unknown>(method: string, path: string, body?: unkn
     if (res.status === 204) return { ok: true, status: 204, error: "", data: undefined as T };
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { ok: false, status: res.status, data: undefined as T, error: res.status === 401 && auth ? "Your session has expired. Please log in again." : data?.error?.message ?? `Request failed (${res.status})` };
+      return { ok: false, status: res.status, data: undefined as T, body: data, error: res.status === 401 && auth ? "Your session has expired. Please log in again." : data?.error?.message ?? `Request failed (${res.status})` };
     }
     return { ok: true, status: res.status, error: "", data: data as T };
   } catch {

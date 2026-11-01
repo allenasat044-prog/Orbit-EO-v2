@@ -7,7 +7,7 @@ import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, Tooltip, R
 import { useNavigate } from "react-router-dom";
 import {
   Search, LayoutDashboard, FileText, CloudSun, Image as ImageIcon, Sparkles, GitCompare, History, Maximize, MapPin,
-  RefreshCw, Grid3x3, HelpCircle, LogOut, LogIn, Hash, Bot, PanelLeftClose, PanelLeftOpen, Eye, BookMarked, UserRound, BookmarkPlus,
+  RefreshCw, Grid3x3, HelpCircle, LogOut, LogIn, Hash, Bot, PanelLeftClose, PanelLeftOpen, Eye, BookMarked, UserRound, BookmarkPlus, BarChart3,
 } from "lucide-react";
 import SearchGroup from "@/components/ui/v-group-18";
 import { SidebarNav, type NavGroupData, type NavItemData } from "@/components/ui/dashboard-sidebar";
@@ -561,6 +561,7 @@ export default function Explore() {
       case "dashboard": navigate("/dashboard"); break;
       case "captions": navigate("/captions"); break;
       case "library": navigate("/library"); break;
+      case "analysis": openInAnalysis(); break;
       case "profile": navigate("/profile"); break;
       case "bookmark": bookmarkHere(); break;
       case "faq": navigate("/faqs"); break;
@@ -580,6 +581,11 @@ export default function Explore() {
       case "pixels": setSmooth((v) => !v); break;
       default: break;
     }
+  };
+
+  const openInAnalysis = () => {
+    if (!point) { navigate("/analysis"); return; }
+    navigate(`/analysis?lat=${point.lat.toFixed(6)}&lon=${point.lon.toFixed(6)}&name=${encodeURIComponent(pinName || "")}`);
   };
 
   const bookmarkHere = () => {
@@ -665,6 +671,7 @@ export default function Explore() {
       { id: "search", title: "Search", icon: Search, shortcut: "⌘K" },
       { id: "dashboard", title: "Dashboard", icon: LayoutDashboard },
       { id: "captions", title: "Captions", icon: FileText },
+      { id: "analysis", title: "Analysis", icon: BarChart3 },
       { id: "library", title: "Library", icon: BookMarked },
       { id: "profile", title: "Profile", icon: UserRound },
     ] },
@@ -736,6 +743,9 @@ export default function Explore() {
             <input type="checkbox" checked={autoCaption} onChange={(e) => setAutoCaption(e.target.checked)} />
             also describe new scenes
           </label>
+          <button type="button" onClick={openInAnalysis} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
+            Open in Analysis
+          </button>
           <button type="button" onClick={bookmarkHere} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
             Bookmark this location
           </button>

@@ -49,14 +49,16 @@ This README describes everything built so far, how it fits together, how to run 
 | 5 | Monitored locations and update runs feeding the Dashboard | Delivered, awaiting your test |
 | 6a | Research model registry: EarthGPT, SkySenseGPT, TerraScope, RS-LLaVA, MTRS paper recorded honestly as unavailable, with reasons | Delivered |
 | 6b | GeoRSCLIP scene tags, caption match scores, Compare models | Delivered, real weights not yet run on your Mac |
-| 7 | Historical change (same pin across dates, change maps) | In progress |
-| 8 | Weather forecast | Done |
-| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | in Progress (final touches) |
+| 7 | Historical change (same pin across dates, change maps) | Planned |
+| 8 | Weather forecast | Planned |
+| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | Delivered, awaiting your test |
+| FIX | One bookmark per place (with a Merge duplicates button), and a full Analysis page: image description, model comparison, historical change with a history list, and weather with a satellite clarity outlook | Delivered, awaiting your test |
+| POLISH | Interface polish using 21st.dev components | Planned |
 | 10 | Automation and hardening (scheduled runs, API docs, security review) | Planned |
-| Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | in progress 50% done |
-| Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | 10% done |
+| Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | Planned |
+| Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | Planned |
 
-The **Library** (bookmarks) and **Profile** pages are new in stage 9, with a Profile button next to Log in and Sign up. The **Analysis** and **Updates** pages are still the original "Not built yet" placeholders.
+The **Library** (bookmarks) and **Profile** pages are new in stage 9, with a Profile button next to Log in and Sign up. The **Updates** page is still a placeholder.
 
 ## How it fits together
 
@@ -315,6 +317,23 @@ Sizes: Close 128 px (1.3 km), Medium 256 px (2.6 km), Wide 512 px (5.1 km). The 
 
 Sentinel-2 true colour is 10 m per pixel, so roads, fields, water and large buildings show, but individual houses and cars do not. The sharpened display image only improves how it looks; it adds no real detail. *Show pixels* switches to the true 10 m pixels.
 
+### Analysis page
+
+Open it from the **Analysis** nav button, from **Open in Analysis** under the Explore map, or from **Analyse this place** on a bookmark. Choose a place (a name, coordinates, one of your monitored locations or one of your bookmarks) and pick how much ground to look at (Close, Medium or Wide). The page then has four tools:
+
+| Tool | What it does |
+|---|---|
+| Image description | Pick a scene and see its picture (the red ring is your place), the scene facts, and an AI description. You can bookmark the place with that description attached. |
+| Compare models | Asks every available AI model about the same picture. Shows each answer, how long it took, a rough image match, scene tags with percentages, and which models are not available here and why. |
+| Historical change | Pick a **Before** and an **After** scene, then slide between the two pictures. It reports hectares changed, the share of usable area, how much was cloud, and what changed into what. Every run is saved under **My past analyses**. |
+| Weather | A 7-day forecast, plus a **satellite clarity outlook**: forecast cloud cover around the Sentinel-2 morning pass, and the best day for a clear picture. |
+
+Differences between two pictures are not confirmed real-world events. Lighting, season, haze and alignment can all create apparent change.
+
+### Bookmarks: one per place
+
+A place can be bookmarked only once. Places less than about 55 m apart count as the same place, because a map click, a search and a saved caption land a few metres apart. Saving a place that is already bookmarked opens the existing bookmark for editing instead, and adds the new caption to it if it had none (a bookmark keeps the caption it already has). **Merge duplicates** on the Library page cleans up duplicates made before this rule: the oldest bookmark at a place is kept and takes any caption, folder or note the others had.
+
 ### Fresh run and saved previews
 
 Saved previews are reused, which makes repeat visits instant. Two things keep them honest:
@@ -365,6 +384,9 @@ All routes are under `/api`. Errors look like `{"error": {"code": "...", "messag
 | GET | `/updates/status` | Running run, last run, last success |
 | GET | `/updates/history` | Runs, newest first (`limit` up to 200, `cursor`) |
 | POST | `/auth/signup`, `/auth/login` | Returns `{token, user}` |
+| GET | `/analysis` | My past change analyses, newest first |
+| GET | `/library/bookmarks/nearby?lat=&lon=` | My bookmark at (about) this place, or `null` |
+| POST | `/library/bookmarks/merge-duplicates` | Merge bookmarks that sit at the same place |
 | GET | `/auth/oauth/google`, `/auth/oauth/github` | Starts "Continue with Google / GitHub" (the browser is redirected) |
 | GET | `/auth/oauth/:provider/callback` | Where Google / GitHub send people back. Redirects to `/auth/callback#token=...` |
 
@@ -500,6 +522,8 @@ Planned stages, in order:
 - **7. Historical change.** The same pin across dates, change maps, evidence masks, and an evaluation approach that scores change and no-change cases separately.
 - **8. Weather forecast.** A weather data service and a forecast time slider. The provider is still to be chosen and its licence checked.
 - **9. Personal library.** A bookmarks page where folders are shown as a tree, and a basic profile page.
+- **FIX.** One bookmark per place, and the Analysis page.
+- **POLISH.** Make the interface look better with 21st.dev components.
 - **10. Automation and hardening.** Weekly scheduled runs, API documentation, security review, rollback.
 - **Hosting.** Host on Vercel with Supabase for the database and Google and GitHub sign-in, set up SEO, and serve everything from one URL with no manual terminal steps. The ML service and job queue will need a separate always-on host.
 - **Final. Frontend enhancement.** Explore layout from the design board (search on top, side list of views, globe), Dock, Slidebar, search bar, space background, themes, GitHub-style profile page, F&Q page.

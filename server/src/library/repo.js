@@ -1,3 +1,5 @@
+import { NEAR_DEGREES, planMerges } from "./places.js";
+
 export class ConflictError extends Error {
   constructor(message) {
     super(message);
@@ -164,6 +166,49 @@ export function createLibraryRepo(pool) {
         [captionId, userId],
       )).rows[0] ?? null;
     },
+    // A bookmark of mine at (about) this place, if any. excludeId lets an edit ignore itself.
+    async findNearbyBookmark(userId, lat, lon, excludeId = null) {
+      const row = (await q(
+        `${bookmarkSelect}
+          where b.user_id = $1 and b.lat is not null
+            and abs(b.lat - $2) <= ${NEAR_DEGREES}
+            and abs(b.lon - $3) <= ${NEAR_DEGREES} / greatest(cos(radians($2)), 0.01)
+            and ($4::uuid is null or b.id <> $4::uuid)
+          ${bookmarkGroup} order by b.created_at asc limit 1`,
+        [userId, lat, lon, excludeId],
+      )).rows[0];
+      return row ?? null;
+    },
+    async findBookmarkByCaption(userId, captionId, excludeId = null) {
+      return (await q(
+        `${bookmarkSelect} where b.user_id = $1 and b.caption_id = $2 and ($3::uuid is null or b.id <> $3::uuid) ${bookmarkGroup}`,
+        [userId, captionId, excludeId],
+      )).rows[0] ?? null;
+    },
+    // Merge bookmarks that sit at the same place (see places.js). Returns how many were removed.
+    async mergeDuplicates(userId) {
+      const rows = (await q(
+        "select id, lat, lon, caption_id, list_id, note, created_at from bookmarks where user_id = $1 and lat is not null order by created_at, id",
+        [userId],
+      )).rows;
+      const plans = planMerges(rows);
+      let removed = 0;
+      for (const plan of plans) {
+        // labels move to the keeper, duplicates go first (a caption can belong to only one bookmark), then the keeper is filled in
+        await q(
+          `insert into bookmark_labels (bookmark_id, label_id)
+             select $1, label_id from bookmark_labels where bookmark_id = any($2::uuid[]) on conflict do nothing`,
+          [plan.keeper_id, plan.remove_ids],
+        );
+        await q("delete from bookmarks where user_id = $1 and id = any($2::uuid[])", [userId, plan.remove_ids]);
+        const cols = Object.keys(plan.patch);
+        if (cols.length) {
+          await q(`update bookmarks set ${cols.map((c, i) => `${c} = $${i + 2}`).join(", ")} where id = $1`, [plan.keeper_id, ...cols.map((c) => plan.patch[c])]);
+        }
+        removed += plan.remove_ids.length;
+      }
+      return { removed, places: plans.length };
+    },
     async createBookmark(userId, b) {
       let id;
       try {
@@ -179,7 +224,7 @@ export function createLibraryRepo(pool) {
       return findBookmark(id);
     },
     async updateBookmark(id, patch) {
-      const cols = ["title", "note", "lat", "lon", "list_id"].filter((k) => patch[k] !== undefined);
+      const cols = ["title", "note", "lat", "lon", "list_id", "caption_id"].filter((k) => patch[k] !== undefined);
       if (cols.length) {
         await q(`update bookmarks set ${cols.map((c, i) => `${c} = $${i + 2}`).join(", ")} where id = $1`, [id, ...cols.map((c) => patch[c])]);
       }
