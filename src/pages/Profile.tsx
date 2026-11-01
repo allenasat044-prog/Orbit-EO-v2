@@ -35,7 +35,7 @@ export default function Profile() {
   if (!profile) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const name = fullName(profile);
-  const site = /^https?:\/\//i.test(profile.website) ? profile.website : "";
+  const site = profile.website && /^https?:\/\//i.test(profile.website) ? profile.website : "";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

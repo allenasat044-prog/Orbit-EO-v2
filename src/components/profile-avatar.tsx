@@ -1,7 +1,7 @@
 const palette = ["#8daaff", "#7ee0c3", "#f5b86b", "#f08fb0", "#b79cff", "#6fd0f0"];
 const colorFor = (s: string) => palette[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % palette.length];
 
-export const fullName = (p: { first_name: string; last_name: string; username: string }) =>
+export const fullName = (p: { first_name?: string | null; last_name?: string | null; username: string }) =>
   [p.first_name, p.last_name].filter(Boolean).join(" ") || p.username;
 
 /** Round profile picture, or coloured initials when there is no picture yet. */

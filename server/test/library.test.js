@@ -22,7 +22,7 @@ function fakeLibrary() {
     async ensureProfile(u) {
       if (!profiles.has(u.id)) {
         const [first, ...rest] = u.name.split(" ");
-        profiles.set(u.id, { user_id: u.id, username: slugify(u.name), first_name: first, last_name: rest.join(" "), bio: "", location: "", website: "", avatar_image: null, cover_image: null, updated_at: "now" });
+        profiles.set(u.id, { user_id: u.id, username: slugify(u.name), first_name: first, last_name: rest.join(" "), bio: "", location: null, website: null, avatar_image: null, cover_image: null, updated_at: "now" });
       }
       return profiles.get(u.id);
     },
@@ -111,6 +111,8 @@ test("profile is created from the account name on first read, then edited", asyn
   assert.equal(p.last_name, "Lovelace");
   assert.equal(p.email, "ada@example.com");
   assert.equal(p.joined_at, "2026-01-01T00:00:00Z");
+  assert.equal(p.location, "");
+  assert.equal(p.website, "");
   assert.equal("user_id" in p, false);
   assert.equal("readme" in p, false);
   const put = await s.ada("PUT", "/api/library/profile", { bio: "Mapping rivers", location: "Bengaluru", website: "https://ada.dev", avatar_image: PNG, cover_image: PNG });

@@ -41,18 +41,18 @@ export function EditProfileDialog({ profile, open, onOpenChange, onSaved }: Prop
 function ProfileForm({ profile, onClose, onSaved }: { profile: Profile; onClose: () => void; onSaved: (p: Profile) => void }) {
   const id = useId();
   const formId = `${id}-profile-form`;
-  const [first, setFirst] = useState(profile.first_name);
-  const [last, setLast] = useState(profile.last_name);
+  const [first, setFirst] = useState(profile.first_name ?? "");
+  const [last, setLast] = useState(profile.last_name ?? "");
   const [username, setUsername] = useState(profile.username);
-  const [website, setWebsite] = useState(profile.website.replace(/^https?:\/\//i, ""));
-  const [location, setLocation] = useState(profile.location);
+  const [website, setWebsite] = useState((profile.website ?? "").replace(/^https?:\/\//i, ""));
+  const [location, setLocation] = useState(profile.location ?? "");
   const [avatar, setAvatar] = useState<string | null>(profile.avatar_image);
   const [cover, setCover] = useState<string | null>(profile.cover_image);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const maxLength = 300;
-  const { value: bio, characterCount, handleChange, maxLength: limit } = useCharacterLimit({ maxLength, initialValue: profile.bio });
+  const { value: bio, characterCount, handleChange, maxLength: limit } = useCharacterLimit({ maxLength, initialValue: profile.bio ?? "" });
 
   const usernameOk = USERNAME.test(username);
 

@@ -11,6 +11,7 @@ import ContactWithGlobe from "@/components/ui/contact-with-globe";
 import Faqs from "@/pages/Faqs";
 import Library from "@/pages/Library";
 import Profile from "@/pages/Profile";
+import ErrorBoundary from "@/components/error-boundary";
 
 const Landing = () => { const nav = useNavigate(); return <OrbitDeliveryHero theme="dark" onNavigate={nav} />; };
 const page = (title: string, el: React.ReactNode) => <PageShell title={title}>{el}</PageShell>;
@@ -18,6 +19,7 @@ const page = (title: string, el: React.ReactNode) => <PageShell title={title}>{e
 export default function App() {
   return (
     <BrowserRouter>
+      <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
@@ -33,6 +35,7 @@ export default function App() {
         <Route path="/updates" element={page("Updates", <ComingSoon api="GET /api/updates/status, /api/updates/history" />)} />
         <Route path="/dashboard" element={page("Dashboard", <Dashboard />)} />
       </Routes>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
