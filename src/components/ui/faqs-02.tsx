@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Panel } from "@/components/ui/spotlight-card";
 
 // ✏️ Put each developer's GitHub username in `github`. Name and role are labels you control.
 const TEAM = [
@@ -72,9 +73,10 @@ function TeamCard({ member }: { member: (typeof TEAM)[number] }) {
   }, [member.github]);
 
   return (
-    <div
+    <Panel
       key={member.github}
-      className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300 mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-3xl border border-white/10 bg-white/[0.02] p-8 sm:flex-row sm:items-center"
+      radius={24}
+      className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300 mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-3xl p-8 sm:flex-row sm:items-center"
     >
       <Avatar className="size-[88px] shrink-0 border border-white/10">
         <AvatarImage src={gh?.avatar_url ?? `https://github.com/${member.github}.png?size=200`} alt={member.name} />
@@ -103,7 +105,7 @@ function TeamCard({ member }: { member: (typeof TEAM)[number] }) {
           <ExternalLink className="size-3.5" />
         </a>
       </div>
-    </div>
+    </Panel>
   );
 }
 
@@ -128,7 +130,7 @@ export default function Faqs02() {
               Everything about how Orbit EO finds satellite imagery, describes it and keeps watch over the places you care about.
             </p>
 
-            <div className="mt-2 flex max-w-md flex-col gap-4 rounded-3xl border border-white/10 bg-white/[0.02] p-4">
+            <Panel radius={24} className="mt-2 flex max-w-md flex-col gap-4 rounded-3xl p-4">
               <div className="flex items-center gap-3.5 px-1 pt-1">
                 <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-foreground">
                   <Users className="size-5" />
@@ -144,15 +146,11 @@ export default function Faqs02() {
               >
                 Meet the team on GitHub
               </a>
-            </div>
+            </Panel>
           </div>
 
-          <Accordion
-            type="single"
-            collapsible
-            defaultValue="item-0"
-            className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] px-7"
-          >
+          <Panel radius={24} className="rounded-3xl px-7 py-0">
+          <Accordion type="single" collapsible defaultValue="item-0">
             {faqs.map((f, i) => (
               <AccordionItem key={f.q} value={`item-${i}`} className="border-white/10 last:border-b-0">
                 <AccordionTrigger className="py-5 text-[17px] font-normal text-foreground hover:no-underline">
@@ -162,6 +160,7 @@ export default function Faqs02() {
               </AccordionItem>
             ))}
           </Accordion>
+          </Panel>
         </div>
       </section>
 

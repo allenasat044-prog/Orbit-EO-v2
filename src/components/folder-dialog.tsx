@@ -6,6 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, type ListItem } from "@/lib/library";
+import { BusyLabel } from "@/components/ui/busy-label";
 
 type Props = { open: boolean; onOpenChange: (o: boolean) => void; folder?: ListItem; onSaved: (f: ListItem) => void };
 
@@ -51,7 +52,7 @@ function FolderForm({ folder, onClose, onSaved }: { folder?: ListItem; onClose: 
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
       <DialogFooter>
         <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-        <Button type="submit" disabled={busy}>{busy ? "Saving…" : folder ? "Rename" : "Create folder"}</Button>
+        <Button type="submit" disabled={busy}><BusyLabel busy={busy} busyText="Saving…">{folder ? "Rename" : "Create folder"}</BusyLabel></Button>
       </DialogFooter>
     </form>
   );

@@ -15,6 +15,8 @@ import { WeatherPopup } from "@/components/ui/weather-popup";
 import { buildWeatherProps } from "@/lib/weather-map";
 import { getToken, logout } from "@/lib/auth";
 import { BookmarkDialog } from "@/components/bookmark-dialog";
+import { Panel } from "@/components/ui/spotlight-card";
+import { BusyLabel } from "@/components/ui/busy-label";
 
 type Geometry = { type: string; coordinates: unknown };
 type Item = {
@@ -734,10 +736,10 @@ export default function Explore() {
       {point && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void refreshArea()} title="Search for scenes over the pin again and cut a brand-new preview, even if one is already saved" className="flex items-center gap-1.5 rounded-md border border-[#8daaff]/50 bg-[#8daaff]/10 px-2 py-1 text-xs font-medium text-[#8daaff] disabled:text-muted-foreground">
-            <RefreshCw className={`size-3 ${refreshBusy ? "animate-spin" : ""}`} />{refreshBusy ? "Refreshing…" : "Fresh run: re-check area"}
+            {!refreshBusy && <RefreshCw className="size-3" />}<BusyLabel busy={refreshBusy} busyText="Refreshing…" size="h-3 w-3">Fresh run: re-check area</BusyLabel>
           </button>
           <button type="button" disabled={monitorBusy} onClick={() => void monitorHere()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
-            {monitorBusy ? "Saving…" : "Monitor this location"}
+            <BusyLabel busy={monitorBusy} busyText="Saving…" size="h-3 w-3">Monitor this location</BusyLabel>
           </button>
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <input type="checkbox" checked={autoCaption} onChange={(e) => setAutoCaption(e.target.checked)} />
@@ -753,13 +755,13 @@ export default function Explore() {
             Weather widget
           </button>
           <button type="button" disabled={weatherBusy} onClick={() => void loadWeather()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
-            {weatherBusy ? "Loading…" : "Weather chart"}
+            <BusyLabel busy={weatherBusy} busyText="Loading…" size="h-3 w-3">Weather chart</BusyLabel>
           </button>
           <button type="button" disabled={analysisBusy || !beforeItem || !afterItem} onClick={() => void analyzeChange()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
             {analysisBusy ? "Analysing…" : "Analyse change"}
           </button>
           <button type="button" disabled={runBusy} onClick={() => void runUpdate()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
-            {runBusy ? "Checking…" : "Check for new scenes now"}
+            <BusyLabel busy={runBusy} busyText="Checking…" size="h-3 w-3">Check for new scenes now</BusyLabel>
           </button>
         </div>
       )}
@@ -769,7 +771,7 @@ export default function Explore() {
         const show = (v: Num, unit = "") => (v == null ? "n/a" : `${v}${unit}`);
         const data = h.time.map((t, k) => ({ k, label: `${t.slice(5, 10)} ${t.slice(11, 16)}`, temp: h.temperature_c[k], rain: h.precipitation_mm[k], cloud: h.cloud_cover_pct[k] }));
         return (
-          <div className="space-y-3 rounded-2xl border border-white/10 p-3">
+          <Panel className="space-y-3 p-3">
             <div className="flex items-center justify-between text-sm">
               <span>Weather at the pin · {forecast.location.timezone ?? "local time"} time</span>
               <button type="button" onClick={() => setForecast(null)} className="text-xs text-muted-foreground hover:text-white">Close</button>
@@ -811,7 +813,7 @@ export default function Explore() {
               Model forecast for roughly an 11 km area around the pin, not a measurement. Cloud cover helps judge whether a new satellite scene will be clear.{" "}
               <a href={forecast.source.url} target="_blank" rel="noreferrer" className="text-[#8daaff] underline">{forecast.source.attribution}</a> (CC BY 4.0).
             </p>
-          </div>
+          </Panel>
         );
       })()}
       {items.length > 0 && (
@@ -851,13 +853,13 @@ export default function Explore() {
         </ul>
       )}
       {chip && (
-        <div className="space-y-2 rounded-2xl border border-white/10 p-3">
+        <Panel className="space-y-2 p-3">
           <div className="flex items-center justify-between text-sm">
             <span>{chip.label} · {chip.width_px}×{chip.height_px} px{chip.gsd_m ? ` · ${chip.gsd_m} m/px` : ""}</span>
             <span className="flex items-center gap-3">
-              <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void (chipItem ? previewChip(chipItem, true) : refreshArea())} title="Cut this preview again from the scene" className="text-xs text-[#8daaff] disabled:text-muted-foreground">{chipBusy !== null || refreshBusy ? "Refreshing…" : "Refresh image"}</button>
-              <button type="button" disabled={captionBusy} onClick={() => void describeChip()} className="text-xs text-[#8daaff] disabled:text-muted-foreground">{captionBusy ? "Describing…" : "Describe this image"}</button>
-              <button type="button" disabled={compareBusy} onClick={() => void compareModels()} className="text-xs text-[#8daaff] disabled:text-muted-foreground">{compareBusy ? "Comparing…" : "Compare models"}</button>
+              <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void (chipItem ? previewChip(chipItem, true) : refreshArea())} title="Cut this preview again from the scene" className="text-xs text-[#8daaff] disabled:text-muted-foreground"><BusyLabel busy={chipBusy !== null || refreshBusy} busyText="Refreshing…" size="h-3 w-3">Refresh image</BusyLabel></button>
+              <button type="button" disabled={captionBusy} onClick={() => void describeChip()} className="text-xs text-[#8daaff] disabled:text-muted-foreground"><BusyLabel busy={captionBusy} busyText="Describing…" size="h-3 w-3">Describe this image</BusyLabel></button>
+              <button type="button" disabled={compareBusy} onClick={() => void compareModels()} className="text-xs text-[#8daaff] disabled:text-muted-foreground"><BusyLabel busy={compareBusy} busyText="Comparing…" size="h-3 w-3">Compare models</BusyLabel></button>
               <button type="button" onClick={() => setSmooth((v) => !v)} className="text-xs text-[#8daaff]">{smooth ? "Show pixels" : "Smooth"}</button>
               <button type="button" onClick={closeChip} className="text-xs text-muted-foreground hover:text-white">Close preview</button>
             </span>
@@ -920,10 +922,10 @@ export default function Explore() {
           <p className="text-xs text-muted-foreground">
             North is up and the red ring is your pin. Each pixel covers about {chip.gsd_m ?? 10} × {chip.gsd_m ?? 10} m on the ground, which is the finest detail Sentinel-2 true colour has: roads, fields, water and large buildings show, but not individual houses or cars.
           </p>
-        </div>
+        </Panel>
       )}
       {analysis && (
-        <div className="space-y-3 rounded-2xl border border-white/10 p-3">
+        <Panel className="space-y-3 p-3">
           <div className="flex items-center justify-between text-sm">
             <span>Change between {analysis.before.acquired_at.slice(0, 10)} and {analysis.after.acquired_at.slice(0, 10)}</span>
             <span className="flex items-center gap-3">
@@ -960,7 +962,7 @@ export default function Explore() {
             {analysis.notes.map((n) => <li key={n}>{n}</li>)}
           </ul>
           <p className="text-xs text-muted-foreground">Measured by image analysis, not AI. Areas are approximate, and a difference between two images is not a confirmed real-world event: lighting, season, haze and alignment can all create apparent change.</p>
-        </div>
+        </Panel>
       )}
       {next && <button type="button" disabled={busy} onClick={loadMore} className="text-sm text-[#8daaff] disabled:text-muted-foreground">Load more</button>}
       {credit && <p className="text-xs text-muted-foreground">{credit}</p>}

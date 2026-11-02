@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getToken } from "@/lib/auth";
 import { BookmarkDialog } from "@/components/bookmark-dialog";
+import { Panel } from "@/components/ui/spotlight-card";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 
 type Item = {
   id: string;
@@ -94,7 +96,7 @@ export default function Captions() {
       )}
       <ul className="grid gap-4 md:grid-cols-2">
         {items.map((i) => (
-          <li key={i.id} className="flex gap-4 rounded-2xl border border-white/10 p-3">
+          <Panel as="li" key={i.id} className="flex gap-4 p-3">
             <SavedImage src={i.image_url} className="h-40 w-40 shrink-0 rounded-lg object-cover" />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <p className="text-sm">{i.caption}</p>
@@ -114,10 +116,10 @@ export default function Captions() {
                 </span>
               </div>
             </div>
-          </li>
+          </Panel>
         ))}
       </ul>
-      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {loading && <MorphingSquare className="h-4 w-4" message="Loading…" messagePlacement="right" />}
       {next && !loading && <button type="button" onClick={() => void load(next)} className="text-sm text-[#8daaff]">Load more</button>}
       {bookmarkTarget && (
         <BookmarkDialog

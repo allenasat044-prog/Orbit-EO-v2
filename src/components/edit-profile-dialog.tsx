@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api, type Profile } from "@/lib/library";
 import { fullName, ProfileAvatar } from "@/components/profile-avatar";
+import { BusyLabel } from "@/components/ui/busy-label";
 
 const field = "rounded-lg border border-input shadow-sm shadow-black/5 focus-visible:ring-2 focus-visible:ring-ring";
 const USERNAME = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;
@@ -141,7 +142,7 @@ function ProfileForm({ profile, onClose, onSaved }: { profile: Profile; onClose:
         <DialogClose asChild>
           <Button type="button" variant="outline">Cancel</Button>
         </DialogClose>
-        <Button type="submit" form={formId} disabled={busy}>{busy ? "Saving…" : "Save changes"}</Button>
+        <Button type="submit" form={formId} disabled={busy}><BusyLabel busy={busy} busyText="Saving…">Save changes</BusyLabel></Button>
       </DialogFooter>
     </>
   );

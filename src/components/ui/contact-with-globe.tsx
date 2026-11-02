@@ -15,6 +15,7 @@ import type {
   GeometryObject,
 } from "topojson-specification";
 import type { GeoPermissibleObjects } from "d3";
+import { Panel } from "@/components/ui/spotlight-card";
 
 const smoothEase = [0.25, 0.1, 0.25, 1] as const;
 
@@ -724,8 +725,8 @@ export default function ContactWithGlobe({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1.0, delay: 0.35, ease: smoothEase }}
-            className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 sm:p-8 flex flex-col gap-5"
           >
+            <Panel radius={16} backdrop="hsl(240 5.9% 10% / 0.85)" className="flex flex-col gap-5 p-6 sm:p-8">
             <div>
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-0.5">Send a message</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -764,6 +765,7 @@ export default function ContactWithGlobe({
               Submit
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Button>
+            </Panel>
           </motion.div>
         </div>
       </div>

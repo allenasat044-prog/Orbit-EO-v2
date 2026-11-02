@@ -4,13 +4,14 @@ import { BarChart3, BookmarkPlus, ExternalLink, FolderPlus, Merge, Pencil, Searc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileTree, type FileNode } from "@/components/ui/file-tree";
+import { Panel } from "@/components/ui/spotlight-card";
 import { BookmarkDialog } from "@/components/bookmark-dialog";
 import { FolderDialog } from "@/components/folder-dialog";
 import { getToken } from "@/lib/auth";
 import { api, type Bookmark, type ListItem } from "@/lib/library";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 
 const day = (iso: string) => new Date(iso).toISOString().slice(0, 10);
-const panel = "rounded-2xl border border-white/10 bg-white/[0.03] p-5";
 
 export default function Library() {
   const token = getToken();
@@ -113,11 +114,11 @@ export default function Library() {
           data={tree}
           selectedId={sel}
           onSelect={(n) => setSel(n.id ?? null)}
-          emptyText={!loaded ? "Loading…" : q ? "Nothing matches your search." : "No bookmarks yet. Press “Add bookmark”, or bookmark a caption or a pin on the map."}
+          emptyText={!loaded ? <MorphingSquare className="h-4 w-4" message="Loading…" messagePlacement="right" /> : q ? "Nothing matches your search." : "No bookmarks yet. Press “Add bookmark”, or bookmark a caption or a pin on the map."}
           className="self-start"
         />
 
-        <section className={panel} aria-live="polite">
+        <Panel as="section" aria-live="polite">
           {selBookmark ? (
             <div className="space-y-4">
               {selBookmark.caption?.image_url && <img key={selBookmark.id} src={selBookmark.caption.image_url} alt="Satellite preview (image file missing? open Explore and press Refresh image)" className="max-h-64 w-full rounded-xl object-cover" />}
@@ -173,7 +174,7 @@ export default function Library() {
               <p className="text-sm">Tip: press “Bookmark” under any caption on the <Link to="/captions" className="text-[#8daaff] hover:underline">Captions</Link> page, or on a pin in the Explore map, and choose which folder to save it in.</p>
             </div>
           )}
-        </section>
+        </Panel>
       </div>
 
       {bookmarkDialog && (

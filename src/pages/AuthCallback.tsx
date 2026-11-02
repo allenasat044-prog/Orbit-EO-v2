@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { setToken } from "@/lib/auth";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 
 // Where Google/GitHub sign-in lands. The server puts our login token after the "#" in the address,
 // which browsers never send to any server. We keep it, wipe it from the address bar and move on.
@@ -22,7 +22,7 @@ export default function AuthCallback() {
 
   return (
     <div className="dark grid min-h-screen place-items-center bg-[#0d1526] text-[#b0bed9]">
-      <p className="flex items-center gap-2 text-sm"><Loader2 className="size-4 animate-spin" />Signing you in…</p>
+      <MorphingSquare className="h-8 w-8" message="Signing you in…" />
     </div>
   );
 }

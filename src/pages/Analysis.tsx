@@ -3,14 +3,17 @@ import { Link, useSearchParams } from "react-router-dom";
 import { BookmarkPlus, CloudSun, GitCompare, History, RefreshCw, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Panel } from "@/components/ui/spotlight-card";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 import { BookmarkDialog } from "@/components/bookmark-dialog";
-import { Bar, Notice, Spinner, Stat, card, day, muted, select } from "@/components/analysis/bits";
+import { Bar, Notice, Spinner, Stat, day, muted, select } from "@/components/analysis/bits";
 import { ChipImage } from "@/components/analysis/chip-image";
 import { ChangeResult } from "@/components/analysis/change-result";
 import { ScenePicker } from "@/components/analysis/scene-picker";
 import { WeatherPanel } from "@/components/analysis/weather-panel";
 import { getToken } from "@/lib/auth";
 import { api, type Bookmark } from "@/lib/library";
+import { BusyLabel } from "@/components/ui/busy-label";
 import {
   analyseChange, compareModels, describeChip, listAnalyses, loadForecast, prepareChip, searchScenes,
   type ChangeAnalysis, type ChipInfo, type Comparison, type Description, type Forecast, type Pin, type Scene,
@@ -202,13 +205,13 @@ export default function Analysis() {
   return (
     <div className="space-y-6">
       {/* ---- where ---- */}
-      <section className={`${card} space-y-4`} aria-label="Choose a place">
+      <Panel as="section" className="space-y-4" aria-label="Choose a place">
         <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); if (query.trim()) void locate({ q: query.trim() }); }}>
           <div className="relative min-w-[16rem] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input aria-label="Place or coordinates" className="rounded-lg border border-input pl-9 focus-visible:ring-2 focus-visible:ring-ring" placeholder="A place name, or coordinates like 12.97, 77.59" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
-          <Button type="submit" disabled={busy || !query.trim()}>{working?.kind === "locate" ? "Searching…" : "Find place"}</Button>
+          <Button type="submit" disabled={busy || !query.trim()}><BusyLabel busy={working?.kind === "locate"} busyText="Searching…">Find place</BusyLabel></Button>
           {regions.length > 0 && (
             <select aria-label="My monitored locations" className={select} value="" disabled={busy} onChange={(e) => { const r = regions.find((x) => x.id === e.target.value); if (r) void locate({ lat: r.location.lat, lon: r.location.lon, name: r.name }); }}>
               <option value="">My monitored locations</option>
@@ -237,7 +240,7 @@ export default function Analysis() {
           </div>
         )}
         {working?.kind === "locate" && <Spinner>{working.text}</Spinner>}
-      </section>
+      </Panel>
 
       {error && <Notice kind="error">{error}</Notice>}
 
@@ -251,11 +254,11 @@ export default function Analysis() {
           ].map(([title, text, Icon]) => {
             const I = Icon as typeof Sparkles;
             return (
-              <div key={title as string} className={card}>
+              <Panel key={title as string}>
                 <I className="mb-2 size-5 text-[#8daaff]" aria-hidden />
                 <h3 className="font-medium text-white">{title as string}</h3>
                 <p className={muted}>{text as string}</p>
-              </div>
+              </Panel>
             );
           })}
           <p className={`${muted} md:col-span-2`}>Start by searching for a place above, or choose one of your monitored locations or bookmarks.</p>
@@ -273,11 +276,11 @@ export default function Analysis() {
 
           {(tab === "describe" || tab === "compare") && (
             <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
-              <section className={card} aria-label="Scenes"><h3 className="mb-3 font-medium text-white">1. Pick a scene</h3>
+              <Panel as="section" aria-label="Scenes"><h3 className="mb-3 font-medium text-white">1. Pick a scene</h3>
                 <ScenePicker mode="single" scenes={scenes} selectedId={selected?.external_id} busyId={working?.kind === "chip" ? selected?.external_id ?? null : null} onSelect={selectScene} />
                 {credit && <p className="mt-3 text-xs text-[#7f8db0]">{credit}</p>}
-              </section>
-              <section className={`${card} space-y-5`} aria-label={tab === "describe" ? "Image description" : "Model comparison"}>
+              </Panel>
+              <Panel as="section" className="space-y-5" aria-label={tab === "describe" ? "Image description" : "Model comparison"}>
                 {!selected ? needScene : (
                   <>
                     {imagePanel}
@@ -290,13 +293,13 @@ export default function Analysis() {
                         </div>
                         {working?.kind === "describe" && <Spinner>{working.text}</Spinner>}
                         {description && (
-                          <article className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-4">
+                          <Panel as="article" radius={12} className="space-y-2 rounded-xl p-4">
                             <p className="text-xs uppercase tracking-widest text-[#8daaff]">Main caption</p>
                             <p className="text-lg text-white">{description.text}</p>
                             <p className="text-xs text-[#7f8db0]">
                               AI-generated by {description.checkpoint}{description.device ? ` on ${description.device}` : ""}{description.latencyMs != null ? ` in ${(description.latencyMs / 1000).toFixed(1)} s` : ""}. Treat it as a rough description, not a measurement.
                             </p>
-                          </article>
+                          </Panel>
                         )}
                       </div>
                     )}
@@ -321,11 +324,11 @@ export default function Analysis() {
                             {comparison.scene_error && <p className="text-xs text-[#7f8db0]">Scene tags unavailable: {comparison.scene_error.message}</p>}
                             <ul className="grid gap-3 md:grid-cols-2">
                               {comparison.results.map((r) => (
-                                <li key={r.model_id} className="space-y-1.5 rounded-xl border border-white/10 bg-black/20 p-4">
+                                <Panel as="li" key={r.model_id} radius={12} className="space-y-1.5 rounded-xl p-4">
                                   <p className="font-medium text-white">{r.name}</p>
                                   {r.text ? <p className="text-sm text-[#dbe4f7]">{r.text}</p> : <p className="text-sm text-red-300">Failed: {r.error?.message ?? "unknown error"}</p>}
                                   <p className="text-xs text-[#7f8db0]">{r.latency_ms != null ? `${(r.latency_ms / 1000).toFixed(1)} s` : ""}{r.alignment != null ? ` · image match ${r.alignment.toFixed(2)}` : ""}</p>
-                                </li>
+                                </Panel>
                               ))}
                             </ul>
                             {comparison.unavailable.length > 0 && (
@@ -338,14 +341,14 @@ export default function Analysis() {
                     )}
                   </>
                 )}
-              </section>
+              </Panel>
             </div>
           )}
 
           {tab === "change" && (
             <div className="space-y-6">
               <div className="grid gap-6 lg:grid-cols-[minmax(0,26rem)_1fr]">
-                <section className={`${card} space-y-3`} aria-label="Pick two scenes">
+                <Panel as="section" className="space-y-3" aria-label="Pick two scenes">
                   <h3 className="font-medium text-white">Pick two scenes</h3>
                   <p className={muted}>Choose an earlier scene as <strong>Before</strong> and a later one as <strong>After</strong>. A few months apart shows change best.</p>
                   <ScenePicker mode="pair" scenes={scenes} beforeId={before?.external_id} afterId={after?.external_id}
@@ -354,8 +357,8 @@ export default function Analysis() {
                   <Button disabled={busy || !before || !after} onClick={() => void analyse()}><History className="size-4" />Analyse change</Button>
                   {!before || !after ? <p className="text-xs text-[#7f8db0]">{!before && !after ? "Pick a Before and an After scene." : !before ? "Now pick the Before scene." : "Now pick the After scene."}</p> : null}
                   {scenes.length < 2 && <p className="text-xs text-[#7f8db0]">Only {scenes.length} scene covers this place in the last 30 days. Change analysis needs two, so try another place.</p>}
-                </section>
-                <section className={card} aria-label="Change result">
+                </Panel>
+                <Panel as="section" aria-label="Change result">
                   {working?.kind === "change" && <Spinner>{working.text}</Spinner>}
                   {!change && working?.kind !== "change" && (
                     <div className="space-y-2">
@@ -369,11 +372,11 @@ export default function Analysis() {
                     </div>
                   )}
                   {change && <ChangeResult a={change} />}
-                </section>
+                </Panel>
               </div>
-              <section className={card} aria-label="My past analyses">
+              <Panel as="section" aria-label="My past analyses">
                 <h3 className="mb-3 font-medium text-white">My past analyses</h3>
-                {history === null ? <p className={muted}>Loading…</p> : history.length === 0 ? <p className={muted}>None yet. Your analyses will be listed here so you can open them again.</p> : (
+                {history === null ? <MorphingSquare className="h-4 w-4" message="Loading…" messagePlacement="right" /> : history.length === 0 ? <p className={muted}>None yet. Your analyses will be listed here so you can open them again.</p> : (
                   <ul className="grid gap-2 md:grid-cols-2">
                     {history.map((h) => (
                       <li key={h.id}>
@@ -389,7 +392,7 @@ export default function Analysis() {
                     ))}
                   </ul>
                 )}
-              </section>
+              </Panel>
             </div>
           )}
 

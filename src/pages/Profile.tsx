@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CalendarDays, Link as LinkIcon, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/ui/spotlight-card";
 import { getToken } from "@/lib/auth";
 import { api, type Profile as ProfileData, type Records } from "@/lib/library";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { fullName, ProfileAvatar } from "@/components/profile-avatar";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 
 const STATS: [keyof Records["counts"], string][] = [
   ["bookmarks", "Bookmarks"], ["lists", "Folders"], ["captions", "AI captions"], ["monitored_locations", "Monitored locations"],
@@ -32,15 +34,15 @@ export default function Profile() {
     );
   }
   if (error) return <p role="alert" className="text-sm text-red-400">{error}</p>;
-  if (!profile) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!profile) return <div className="grid min-h-[30vh] place-items-center"><MorphingSquare message="Loading your profile…" /></div>;
 
   const name = fullName(profile);
   const site = profile.website && /^https?:\/\//i.test(profile.website) ? profile.website : "";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-        <div className="h-36 bg-gradient-to-r from-[#1c2a4a] via-[#243a6b] to-[#4773ec]/50 sm:h-44">
+      <Panel as="section" className="p-0">
+        <div className="h-36 overflow-hidden rounded-t-[14px] bg-gradient-to-r from-[#1c2a4a] via-[#243a6b] to-[#4773ec]/50 sm:h-44">
           {profile.cover_image && <img src={profile.cover_image} alt="Cover" className="h-full w-full object-cover" />}
         </div>
         <div className="px-6 pb-6">
@@ -62,14 +64,14 @@ export default function Profile() {
             <li className="flex items-center gap-1.5"><CalendarDays className="size-4" />Joined {new Date(profile.joined_at).toISOString().slice(0, 10)}</li>
           </ul>
         </div>
-      </section>
+      </Panel>
 
       <section aria-label="Your activity" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {STATS.map(([k, label]) => (
-          <div key={k} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <Panel key={k} className="p-4">
             <p className="text-3xl font-semibold text-white">{counts ? counts[k] : "–"}</p>
             <p className="text-sm text-[#b0bed9]">{label}</p>
-          </div>
+          </Panel>
         ))}
       </section>
 

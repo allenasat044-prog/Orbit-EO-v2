@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api, type Bookmark, type ListItem } from "@/lib/library";
+import { BusyLabel } from "@/components/ui/busy-label";
 
 export type BookmarkDefaults = {
   title: string;
@@ -193,7 +194,7 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
 
       <DialogFooter>
         <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-        <Button type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Save changes" : "Save"}</Button>
+        <Button type="submit" disabled={busy}><BusyLabel busy={busy} busyText="Saving…">{editing ? "Save changes" : "Save"}</BusyLabel></Button>
       </DialogFooter>
     </form>
   );

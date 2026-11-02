@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { login, signup } from "@/lib/auth";
 import { GlobeWireframe, FormDots } from "@/components/ui/contact-with-globe";
+import { BusyLabel } from "@/components/ui/busy-label";
 
 type Mode = "login" | "signup";
 
@@ -161,8 +162,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
                   <p className="text-xs text-muted-foreground">Signed up with Google or GitHub? Use the buttons above instead.</p>
                 )}
                 <Button type="submit" className="group h-11 w-full rounded-xl font-semibold" disabled={busy}>
-                  {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  {isSignup ? "Sign up" : "Log in"}
+                  <BusyLabel busy={busy} busyText={isSignup ? "Creating your account…" : "Logging in…"} size="h-4 w-4">{isSignup ? "Sign up" : "Log in"}</BusyLabel>
                   {!busy && <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />}
                 </Button>
               </form>

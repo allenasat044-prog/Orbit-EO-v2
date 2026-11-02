@@ -1,5 +1,7 @@
+import { BusyLabel } from "@/components/ui/busy-label";
 import { day, muted } from "@/components/analysis/bits";
 import type { Scene } from "@/lib/analysis-api";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 
 type Common = { scenes: Scene[]; loading?: boolean; busyId?: string | null };
 type Single = Common & { mode: "single"; selectedId?: string | null; onSelect: (s: Scene) => void };
@@ -10,7 +12,7 @@ const cloudTone = (c: number | null) => (c == null ? "text-[#b0bed9]" : c < 10 ?
 /** The satellite scenes that cover the pin, newest first. Pick one, or pick a Before and an After. */
 export function ScenePicker(props: Single | Pair) {
   const { scenes, loading, busyId } = props;
-  if (loading) return <p className={muted}>Looking for scenes…</p>;
+  if (loading) return <MorphingSquare className="h-4 w-4" message="Looking for scenes…" messagePlacement="right" />;
   if (scenes.length === 0) return <p className={muted}>No scene covers this exact point in the last 30 days with cloud cover up to 30%. Try another place.</p>;
   return (
     <ul className="space-y-2" aria-label="Scenes over this place">
@@ -35,7 +37,7 @@ export function ScenePicker(props: Single | Pair) {
                 className={`flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-2.5 transition-colors disabled:opacity-60 ${on ? "border-[#8daaff] bg-[#8daaff]/10" : "border-white/10 hover:bg-white/5"}`}
               >
                 {info}
-                <span className="shrink-0 text-xs text-[#8daaff]">{busyId === s.external_id ? "Preparing…" : on ? "Selected" : "Select"}</span>
+                <span className="shrink-0 text-xs text-[#8daaff]"><BusyLabel busy={busyId === s.external_id} busyText="Preparing…" size="h-3 w-3">{on ? "Selected" : "Select"}</BusyLabel></span>
               </button>
             </li>
           );

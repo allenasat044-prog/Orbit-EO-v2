@@ -53,7 +53,7 @@ This README describes everything built so far, how it fits together, how to run 
 | 8 | Weather forecast | Planned |
 | 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | Delivered, awaiting your test |
 | FIX | One bookmark per place (with a Merge duplicates button), and a full Analysis page: image description, model comparison, historical change with a history list, and weather with a satellite clarity outlook | Delivered, awaiting your test |
-| POLISH | Interface polish using 21st.dev components | Planned |
+| POLISH | Interface polish using 21st.dev components. Done so far: spotlight cards, a bento Dashboard, and a morphing-square loader everywhere | In progress |
 | 10 | Automation and hardening (scheduled runs, API docs, security review) | Planned |
 | Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | Planned |
 | Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | Planned |
@@ -316,6 +316,38 @@ The preview job:
 Sizes: Close 128 px (1.3 km), Medium 256 px (2.6 km), Wide 512 px (5.1 km). The preview is placed on the globe, and the large blue scene outline is hidden while it shows.
 
 Sentinel-2 true colour is 10 m per pixel, so roads, fields, water and large buildings show, but individual houses and cars do not. The sharpened display image only improves how it looks; it adds no real detail. *Show pixels* switches to the true 10 m pixels.
+
+### Dashboard
+
+The Dashboard uses the bento layout of the 21st.dev "web3-bento" component, filled with Orbit EO's own numbers. Everyone sees the public tiles; the personal ones need a login.
+
+| Tile | Shows |
+|---|---|
+| Welcome | New scenes found in the last 30 days, compared with the 30 days before, and a bar for each day. |
+| Locations | Your monitored places as a stack of cards. Click a card to bring it forward. |
+| Sky | Forecast cloud cover (09:00-12:00, when Sentinel-2 passes) over your first place, for today and the next two days. |
+| Scenes found vs captions made | Running totals over 1 week, 1 month or 3 months, and the share of scenes that have a caption. |
+| Your library | Captions, bookmarks, folders and locations, each linking to its page. |
+| Monitoring | Run success rate, last check, failed tasks, new scenes this month, the last ten runs, and the **Check for new scenes now** button. |
+| System status | The API, database, AI models and imagery source, with response times. |
+| Update runs | A bar per run, with averages. |
+| Recent activity | Your latest captions, bookmarks, locations and runs (public runs if you are logged out). |
+
+Loading uses the morphing square (`src/components/ui/morphing-square.tsx`). For a button that can be busy, wrap its label in `BusyLabel` (`src/components/ui/busy-label.tsx`).
+
+### Spotlight cards (POLISH)
+
+Cards across the app (Analysis, Library, Captions, Profile, FAQ, Contact, and the panels in Explore) use the 21st.dev spotlight card: a soft glow and a lit border that follow the mouse. The Dashboard keeps its own cards.
+
+For a new card, use the `Panel` shortcut from `src/components/ui/spotlight-card.tsx`:
+
+```tsx
+import { Panel } from "@/components/ui/spotlight-card";
+
+<Panel as="section" className="space-y-4" aria-label="My card">…</Panel>
+```
+
+`as` picks the HTML element (`section`, `li`, `article`…). Padding and corners are changed with normal classes, and `radius` (in pixels) should match the card's corner class (16 for `rounded-2xl`, 24 for `rounded-3xl`). `glowColor` picks the colour family. Cards can be nested. The glow is off on touch screens, and all cards share one mouse listener.
 
 ### Analysis page
 

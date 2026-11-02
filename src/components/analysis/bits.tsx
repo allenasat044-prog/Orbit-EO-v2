@@ -1,15 +1,15 @@
-import { Loader2 } from "lucide-react";
+import { Panel } from "@/components/ui/spotlight-card";
+import { MorphingSquare } from "@/components/ui/morphing-square";
 
-export const card = "rounded-2xl border border-white/10 bg-white/[0.03] p-5";
 export const muted = "text-sm text-[#b0bed9]";
 export const select = "h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground [color-scheme:dark]";
 
 export function Spinner({ children }: { children: React.ReactNode }) {
   return (
-    <p role="status" className="flex items-start gap-2 text-sm text-[#b0bed9]">
-      <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin" aria-hidden />
+    <div className="flex items-start gap-3 text-sm text-[#b0bed9]">
+      <MorphingSquare className="mt-0.5 h-4 w-4 shrink-0" />
       <span>{children}</span>
-    </p>
+    </div>
   );
 }
 
@@ -29,11 +29,11 @@ export function Bar({ value, max = 1, tone = "#8daaff", label }: { value: number
 
 export function Stat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+    <Panel radius={12} className="rounded-xl p-4">
       <p className="text-2xl font-semibold text-white">{value}</p>
       <p className="text-sm text-[#b0bed9]">{label}</p>
       {hint && <p className="mt-1 text-xs text-[#7f8db0]">{hint}</p>}
-    </div>
+    </Panel>
   );
 }
 

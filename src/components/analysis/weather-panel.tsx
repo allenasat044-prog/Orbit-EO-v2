@@ -1,7 +1,8 @@
 import "@/components/ui/weather.css";
 import { Weather } from "@/components/ui/weather";
-import { Bar, card, day, muted } from "@/components/analysis/bits";
+import { Bar, day, muted } from "@/components/analysis/bits";
 import { buildWeatherProps } from "@/lib/weather-map";
+import { Panel } from "@/components/ui/spotlight-card";
 import { cloudOutlook } from "@/lib/cloud-outlook";
 import type { Forecast } from "@/lib/analysis-api";
 
@@ -21,7 +22,7 @@ export function WeatherPanel({ forecast, place }: { forecast: Forecast; place: s
           <a href={forecast.source.url} target="_blank" rel="noreferrer" className="underline">{forecast.source.attribution}</a> (CC BY 4.0). Model forecast, not a measurement.
         </p>
       </div>
-      <section className={card} aria-label="Satellite clarity outlook">
+      <Panel as="section" aria-label="Satellite clarity outlook">
         <h3 className="text-lg font-semibold text-white">Satellite clarity outlook</h3>
         <p className={muted}>Forecast cloud cover around 09:00-12:00 local time, when Sentinel-2 usually passes. Low cloud means a clearer new picture.</p>
         <ul className="mt-4 space-y-3">
@@ -35,7 +36,7 @@ export function WeatherPanel({ forecast, place }: { forecast: Forecast; place: s
         </ul>
         {best && <p className="mt-4 text-sm text-[#dbe4f7]">Best day for a clear picture: <strong>{weekday(best.date)} {best.date.slice(5)}</strong> ({best.avg}% cloud forecast).</p>}
         <p className="mt-3 text-xs text-[#7f8db0]">Sentinel-2 revisits a place about every 5 days, so a clear day does not always mean a new picture. Check Explore for new scenes.</p>
-      </section>
+      </Panel>
     </div>
   );
 }

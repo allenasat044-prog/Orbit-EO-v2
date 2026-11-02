@@ -1,7 +1,9 @@
 "use client"
 
+import * as React from "react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { Panel } from "@/components/ui/spotlight-card"
 
 export interface FileNode {
   /** Stable id (used for selection). Falls back to the name. */
@@ -23,7 +25,7 @@ interface FileTreeProps {
   onSelect?: (node: FileNode) => void
   defaultOpen?: boolean
   /** Shown when `data` is empty. */
-  emptyText?: string
+  emptyText?: React.ReactNode
 }
 
 interface FileItemProps {
@@ -210,11 +212,10 @@ function FileItem({ node, depth, selectedId, onSelect, defaultOpen }: FileItemPr
 
 export function FileTree({ data, className, title = "explorer", selectedId, onSelect, defaultOpen = true, emptyText }: FileTreeProps) {
   return (
-    <div
-      className={cn(
-        "bg-file-tree-bg rounded-lg border border-border/50 p-3 font-mono",
-        className,
-      )}
+    <Panel
+      radius={8}
+      backdrop="var(--file-tree-bg)"
+      className={cn("rounded-lg p-3 font-mono", className)}
     >
       {/* Header */}
       <div className="flex items-center gap-2 pb-3 mb-2 border-b border-border/30">
@@ -228,11 +229,11 @@ export function FileTree({ data, className, title = "explorer", selectedId, onSe
 
       {/* Tree */}
       <div className="space-y-0.5" role="tree">
-        {data.length === 0 && emptyText && <p className="px-2 py-3 text-xs text-muted-foreground">{emptyText}</p>}
+        {data.length === 0 && emptyText && <div className="px-2 py-3 text-xs text-muted-foreground">{emptyText}</div>}
         {data.map((node) => (
           <FileItem key={node.id ?? node.name} node={node} depth={0} selectedId={selectedId} onSelect={onSelect} defaultOpen={defaultOpen} />
         ))}
       </div>
-    </div>
+    </Panel>
   )
 }
