@@ -148,7 +148,7 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
         <DialogDescription>{editing ? "Change the details or move it to another folder." : "Choose where to save it."}</DialogDescription>
       </DialogHeader>
 
-      {notice && <p role="status" className="rounded-lg border border-[#8daaff]/30 bg-[#8daaff]/10 p-3 text-xs text-[#cfe0ff]">{notice}</p>}
+      {notice && <p role="status" className="rounded-lg border border-link/30 bg-link/10 p-3 text-xs text-link">{notice}</p>}
 
       <div className="space-y-2">
         <Label htmlFor={`${id}-title`}>Name</Label>
@@ -161,7 +161,7 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
           id={`${id}-folder`}
           value={folder}
           onChange={(e) => setFolder(e.target.value)}
-          className={`${field} h-10 w-full bg-background px-3 text-sm [color-scheme:dark]`}
+          className={`${field} h-10 w-full bg-background px-3 text-sm`}
           disabled={!foldersLoaded}
         >
           <option value="">Unsorted (no folder)</option>
@@ -190,7 +190,7 @@ function BookmarkForm({ bookmark, defaults, onClose, onSaved }: { bookmark?: Boo
       </div>
 
       {hasCaption && <p className="text-xs text-muted-foreground">{caption ? "This place keeps its satellite preview and AI caption." : "Saved together with its satellite preview and AI caption."}</p>}
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       <DialogFooter>
         <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>

@@ -27,7 +27,7 @@ const areaKm = (px: number, gsd: number | null) => `${((px * (gsd ?? 10)) / 1000
 function SavedImage({ src, className }: { src: string; className: string }) {
   const [broken, setBroken] = useState(false);
   return broken ? (
-    <div className={`${className} flex items-center justify-center border border-dashed border-white/20 p-3 text-center text-xs text-muted-foreground`}>
+    <div className={`${className} flex items-center justify-center border border-dashed border-line-strong p-3 text-center text-xs text-muted-foreground`}>
       Image file missing. Open Explore and press “Refresh image”.
     </div>
   ) : (
@@ -81,17 +81,17 @@ export default function Captions() {
   if (!token) {
     return (
       <p className="text-muted-foreground">
-        <Link to="/login" className="text-[#8daaff] hover:underline">Log in</Link> or <Link to="/signup" className="text-[#8daaff] hover:underline">sign up</Link> to see your saved captions.
+        <Link to="/login" className="text-link hover:underline">Log in</Link> or <Link to="/signup" className="text-link hover:underline">sign up</Link> to see your saved captions.
       </p>
     );
   }
 
   return (
     <div className="space-y-4">
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {loaded && items.length === 0 && !error && (
         <p className="text-muted-foreground">
-          No captions yet. Open <Link to="/explore" className="text-[#8daaff] hover:underline">Explore</Link>, drop a pin, press <em>Preview</em> on a scene, then <em>Describe this image</em>.
+          No captions yet. Open <Link to="/explore" className="text-link hover:underline">Explore</Link>, drop a pin, press <em>Preview</em> on a scene, then <em>Describe this image</em>.
         </p>
       )}
       <ul className="grid gap-4 md:grid-cols-2">
@@ -110,9 +110,9 @@ export default function Captions() {
                 <span className="text-muted-foreground">Saved {day(i.created_at)}</span>
                 <span className="flex gap-4">
                   {saved.has(i.id)
-                    ? <Link to="/library" className="text-[#7ee0c3] hover:underline">Bookmarked ✓</Link>
-                    : <button type="button" onClick={() => setBookmarkTarget(i)} className="text-[#8daaff] hover:underline">Bookmark</button>}
-                  <button type="button" onClick={() => void remove(i)} className="text-muted-foreground hover:text-red-400">Delete</button>
+                    ? <Link to="/library" className="text-ok hover:underline">Bookmarked ✓</Link>
+                    : <button type="button" onClick={() => setBookmarkTarget(i)} className="text-link hover:underline">Bookmark</button>}
+                  <button type="button" onClick={() => void remove(i)} className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400">Delete</button>
                 </span>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function Captions() {
         ))}
       </ul>
       {loading && <MorphingSquare className="h-4 w-4" message="Loading…" messagePlacement="right" />}
-      {next && !loading && <button type="button" onClick={() => void load(next)} className="text-sm text-[#8daaff]">Load more</button>}
+      {next && !loading && <button type="button" onClick={() => void load(next)} className="text-sm text-link">Load more</button>}
       {bookmarkTarget && (
         <BookmarkDialog
           open

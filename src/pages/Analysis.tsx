@@ -171,18 +171,18 @@ export default function Analysis() {
   if (!token) {
     return (
       <p className="text-muted-foreground">
-        <Link to="/login" className="text-[#8daaff] hover:underline">Log in</Link> or <Link to="/signup" className="text-[#8daaff] hover:underline">sign up</Link> to use the analysis tools.
+        <Link to="/login" className="text-link hover:underline">Log in</Link> or <Link to="/signup" className="text-link hover:underline">sign up</Link> to use the analysis tools.
       </p>
     );
   }
 
   const facts = chip && selected && (
     <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-      <dt className="text-[#7f8db0]">Taken</dt><dd className="text-[#dbe4f7]">{day(selected.acquired_at)}</dd>
-      <dt className="text-[#7f8db0]">Satellite</dt><dd className="text-[#dbe4f7]">{selected.platform ?? selected.collection}</dd>
-      <dt className="text-[#7f8db0]">Cloud cover</dt><dd className="text-[#dbe4f7]">{selected.cloud_cover == null ? "unknown" : `${Math.round(selected.cloud_cover)}%`}</dd>
-      <dt className="text-[#7f8db0]">Detail</dt><dd className="text-[#dbe4f7]">{chip.gsd_m ?? 10} m per pixel</dd>
-      <dt className="text-[#7f8db0]">Area shown</dt><dd className="text-[#dbe4f7]">about {((chip.width_px * (chip.gsd_m ?? 10)) / 1000).toFixed(1)} × {((chip.height_px * (chip.gsd_m ?? 10)) / 1000).toFixed(1)} km</dd>
+      <dt className="text-ink-faint">Taken</dt><dd className="text-ink-soft">{day(selected.acquired_at)}</dd>
+      <dt className="text-ink-faint">Satellite</dt><dd className="text-ink-soft">{selected.platform ?? selected.collection}</dd>
+      <dt className="text-ink-faint">Cloud cover</dt><dd className="text-ink-soft">{selected.cloud_cover == null ? "unknown" : `${Math.round(selected.cloud_cover)}%`}</dd>
+      <dt className="text-ink-faint">Detail</dt><dd className="text-ink-soft">{chip.gsd_m ?? 10} m per pixel</dd>
+      <dt className="text-ink-faint">Area shown</dt><dd className="text-ink-soft">about {((chip.width_px * (chip.gsd_m ?? 10)) / 1000).toFixed(1)} × {((chip.height_px * (chip.gsd_m ?? 10)) / 1000).toFixed(1)} km</dd>
     </dl>
   );
 
@@ -227,12 +227,12 @@ export default function Analysis() {
         </form>
         {pin && (
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-            <p className="text-[#dbe4f7]"><strong className="text-white">{pin.name}</strong> <span className="text-[#b0bed9]">· {pin.lat.toFixed(4)}, {pin.lon.toFixed(4)}</span></p>
+            <p className="text-ink-soft"><strong className="text-ink">{pin.name}</strong> <span className="text-ink-muted">· {pin.lat.toFixed(4)}, {pin.lon.toFixed(4)}</span></p>
             <div className="flex items-center gap-2" role="group" aria-label="Preview area around the pin">
-              <span className="text-[#b0bed9]">Area</span>
+              <span className="text-ink-muted">Area</span>
               {ZOOMS.map((z) => (
                 <button key={z.px} type="button" aria-pressed={sizePx === z.px} disabled={busy} onClick={() => changeSize(z.px)}
-                  className={`rounded-lg border px-3 py-1 text-xs transition-colors disabled:opacity-60 ${sizePx === z.px ? "border-[#8daaff] bg-[#8daaff]/10 text-white" : "border-white/15 text-[#b0bed9] hover:bg-white/5"}`}>
+                  className={`rounded-lg border px-3 py-1 text-xs transition-colors disabled:opacity-60 ${sizePx === z.px ? "border-link bg-link/10 text-ink" : "border-line-strong text-ink-muted hover:bg-wash"}`}>
                   {z.name} · {z.km}
                 </button>
               ))}
@@ -255,8 +255,8 @@ export default function Analysis() {
             const I = Icon as typeof Sparkles;
             return (
               <Panel key={title as string}>
-                <I className="mb-2 size-5 text-[#8daaff]" aria-hidden />
-                <h3 className="font-medium text-white">{title as string}</h3>
+                <I className="mb-2 size-5 text-link" aria-hidden />
+                <h3 className="font-medium text-ink">{title as string}</h3>
                 <p className={muted}>{text as string}</p>
               </Panel>
             );
@@ -265,10 +265,10 @@ export default function Analysis() {
         </section>
       ) : (
         <>
-          <div role="tablist" aria-label="Analysis tools" className="flex flex-wrap gap-1 border-b border-white/10">
+          <div role="tablist" aria-label="Analysis tools" className="flex flex-wrap gap-1 border-b border-line">
             {TABS.map(([id, label, Icon]) => (
               <button key={id} role="tab" type="button" aria-selected={tab === id} onClick={() => setTab(id)}
-                className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm transition-colors ${tab === id ? "border-[#8daaff] text-white" : "border-transparent text-[#b0bed9] hover:text-white"}`}>
+                className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm transition-colors ${tab === id ? "border-link text-ink" : "border-transparent text-ink-muted hover:text-ink"}`}>
                 <Icon className="size-4" />{label}
               </button>
             ))}
@@ -276,9 +276,9 @@ export default function Analysis() {
 
           {(tab === "describe" || tab === "compare") && (
             <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
-              <Panel as="section" aria-label="Scenes"><h3 className="mb-3 font-medium text-white">1. Pick a scene</h3>
+              <Panel as="section" aria-label="Scenes"><h3 className="mb-3 font-medium text-ink">1. Pick a scene</h3>
                 <ScenePicker mode="single" scenes={scenes} selectedId={selected?.external_id} busyId={working?.kind === "chip" ? selected?.external_id ?? null : null} onSelect={selectScene} />
-                {credit && <p className="mt-3 text-xs text-[#7f8db0]">{credit}</p>}
+                {credit && <p className="mt-3 text-xs text-ink-faint">{credit}</p>}
               </Panel>
               <Panel as="section" className="space-y-5" aria-label={tab === "describe" ? "Image description" : "Model comparison"}>
                 {!selected ? needScene : (
@@ -294,9 +294,9 @@ export default function Analysis() {
                         {working?.kind === "describe" && <Spinner>{working.text}</Spinner>}
                         {description && (
                           <Panel as="article" radius={12} className="space-y-2 rounded-xl p-4">
-                            <p className="text-xs uppercase tracking-widest text-[#8daaff]">Main caption</p>
-                            <p className="text-lg text-white">{description.text}</p>
-                            <p className="text-xs text-[#7f8db0]">
+                            <p className="text-xs uppercase tracking-widest text-link">Main caption</p>
+                            <p className="text-lg text-ink">{description.text}</p>
+                            <p className="text-xs text-ink-faint">
                               AI-generated by {description.checkpoint}{description.device ? ` on ${description.device}` : ""}{description.latencyMs != null ? ` in ${(description.latencyMs / 1000).toFixed(1)} s` : ""}. Treat it as a rough description, not a measurement.
                             </p>
                           </Panel>
@@ -311,30 +311,30 @@ export default function Analysis() {
                           <div className="space-y-4">
                             {comparison.scene_tags && (
                               <div className="space-y-2">
-                                <h4 className="font-medium text-white">Scene tags <span className="text-xs font-normal text-[#7f8db0]">(GeoRSCLIP)</span></h4>
+                                <h4 className="font-medium text-ink">Scene tags <span className="text-xs font-normal text-ink-faint">(GeoRSCLIP)</span></h4>
                                 <ul className="space-y-1.5">
                                   {comparison.scene_tags.map((t) => (
                                     <li key={t.label} className="grid grid-cols-[minmax(0,12rem)_1fr_auto] items-center gap-3 text-sm">
-                                      <span className="truncate text-[#dbe4f7]">{t.label}</span><Bar value={t.score} label={`${Math.round(t.score * 100)}%`} /><span className="tabular-nums text-[#b0bed9]">{Math.round(t.score * 100)}%</span>
+                                      <span className="truncate text-ink-soft">{t.label}</span><Bar value={t.score} label={`${Math.round(t.score * 100)}%`} /><span className="tabular-nums text-ink-muted">{Math.round(t.score * 100)}%</span>
                                     </li>
                                   ))}
                                 </ul>
                               </div>
                             )}
-                            {comparison.scene_error && <p className="text-xs text-[#7f8db0]">Scene tags unavailable: {comparison.scene_error.message}</p>}
+                            {comparison.scene_error && <p className="text-xs text-ink-faint">Scene tags unavailable: {comparison.scene_error.message}</p>}
                             <ul className="grid gap-3 md:grid-cols-2">
                               {comparison.results.map((r) => (
                                 <Panel as="li" key={r.model_id} radius={12} className="space-y-1.5 rounded-xl p-4">
-                                  <p className="font-medium text-white">{r.name}</p>
-                                  {r.text ? <p className="text-sm text-[#dbe4f7]">{r.text}</p> : <p className="text-sm text-red-300">Failed: {r.error?.message ?? "unknown error"}</p>}
-                                  <p className="text-xs text-[#7f8db0]">{r.latency_ms != null ? `${(r.latency_ms / 1000).toFixed(1)} s` : ""}{r.alignment != null ? ` · image match ${r.alignment.toFixed(2)}` : ""}</p>
+                                  <p className="font-medium text-ink">{r.name}</p>
+                                  {r.text ? <p className="text-sm text-ink-soft">{r.text}</p> : <p className="text-sm text-red-700 dark:text-red-300">Failed: {r.error?.message ?? "unknown error"}</p>}
+                                  <p className="text-xs text-ink-faint">{r.latency_ms != null ? `${(r.latency_ms / 1000).toFixed(1)} s` : ""}{r.alignment != null ? ` · image match ${r.alignment.toFixed(2)}` : ""}</p>
                                 </Panel>
                               ))}
                             </ul>
                             {comparison.unavailable.length > 0 && (
-                              <p className="text-xs text-[#7f8db0]">Not available on this machine: {comparison.unavailable.map((u, i) => <span key={u.model_id} title={u.reason}>{u.name}{i < comparison.unavailable.length - 1 ? ", " : ""}</span>)}. Hover a name for the reason.</p>
+                              <p className="text-xs text-ink-faint">Not available on this machine: {comparison.unavailable.map((u, i) => <span key={u.model_id} title={u.reason}>{u.name}{i < comparison.unavailable.length - 1 ? ", " : ""}</span>)}. Hover a name for the reason.</p>
                             )}
-                            <p className="text-xs text-[#7f8db0]">AI-generated. Image match is a rough similarity between the image and each caption, not a measure of truth.</p>
+                            <p className="text-xs text-ink-faint">AI-generated. Image match is a rough similarity between the image and each caption, not a measure of truth.</p>
                           </div>
                         )}
                       </div>
@@ -349,44 +349,44 @@ export default function Analysis() {
             <div className="space-y-6">
               <div className="grid gap-6 lg:grid-cols-[minmax(0,26rem)_1fr]">
                 <Panel as="section" className="space-y-3" aria-label="Pick two scenes">
-                  <h3 className="font-medium text-white">Pick two scenes</h3>
+                  <h3 className="font-medium text-ink">Pick two scenes</h3>
                   <p className={muted}>Choose an earlier scene as <strong>Before</strong> and a later one as <strong>After</strong>. A few months apart shows change best.</p>
                   <ScenePicker mode="pair" scenes={scenes} beforeId={before?.external_id} afterId={after?.external_id}
                     onBefore={(s) => setBefore(after?.external_id === s.external_id ? null : s)} onAfter={(s) => setAfter(before?.external_id === s.external_id ? null : s)} />
                   {picks && <Notice kind="warn">{picks}</Notice>}
                   <Button disabled={busy || !before || !after} onClick={() => void analyse()}><History className="size-4" />Analyse change</Button>
-                  {!before || !after ? <p className="text-xs text-[#7f8db0]">{!before && !after ? "Pick a Before and an After scene." : !before ? "Now pick the Before scene." : "Now pick the After scene."}</p> : null}
-                  {scenes.length < 2 && <p className="text-xs text-[#7f8db0]">Only {scenes.length} scene covers this place in the last 30 days. Change analysis needs two, so try another place.</p>}
+                  {!before || !after ? <p className="text-xs text-ink-faint">{!before && !after ? "Pick a Before and an After scene." : !before ? "Now pick the Before scene." : "Now pick the After scene."}</p> : null}
+                  {scenes.length < 2 && <p className="text-xs text-ink-faint">Only {scenes.length} scene covers this place in the last 30 days. Change analysis needs two, so try another place.</p>}
                 </Panel>
                 <Panel as="section" aria-label="Change result">
                   {working?.kind === "change" && <Spinner>{working.text}</Spinner>}
                   {!change && working?.kind !== "change" && (
                     <div className="space-y-2">
-                      <h3 className="font-medium text-white">How it works</h3>
-                      <ol className="list-decimal space-y-1 pl-5 text-sm text-[#b0bed9]">
+                      <h3 className="font-medium text-ink">How it works</h3>
+                      <ol className="list-decimal space-y-1 pl-5 text-sm text-ink-muted">
                         <li>Pick a Before and an After scene on the left.</li>
                         <li>Press Analyse change.</li>
                         <li>Slide between the two pictures, and read how much changed and into what.</li>
                       </ol>
-                      <p className="text-xs text-[#7f8db0]">Every analysis you run is saved in “My past analyses” below.</p>
+                      <p className="text-xs text-ink-faint">Every analysis you run is saved in “My past analyses” below.</p>
                     </div>
                   )}
                   {change && <ChangeResult a={change} />}
                 </Panel>
               </div>
               <Panel as="section" aria-label="My past analyses">
-                <h3 className="mb-3 font-medium text-white">My past analyses</h3>
+                <h3 className="mb-3 font-medium text-ink">My past analyses</h3>
                 {history === null ? <MorphingSquare className="h-4 w-4" message="Loading…" messagePlacement="right" /> : history.length === 0 ? <p className={muted}>None yet. Your analyses will be listed here so you can open them again.</p> : (
                   <ul className="grid gap-2 md:grid-cols-2">
                     {history.map((h) => (
                       <li key={h.id}>
                         <button type="button" onClick={() => { setChange(h); window.scrollTo({ top: 0, behavior: "smooth" }); }} aria-pressed={change?.id === h.id}
-                          className={`flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-left transition-colors ${change?.id === h.id ? "border-[#8daaff] bg-[#8daaff]/10" : "border-white/10 hover:bg-white/5"}`}>
+                          className={`flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-left transition-colors ${change?.id === h.id ? "border-link bg-link/10" : "border-line hover:bg-wash"}`}>
                           <span>
-                            <span className="block text-sm text-white">{day(h.before.acquired_at)} → {day(h.after.acquired_at)}</span>
-                            <span className="block text-xs text-[#7f8db0]">{h.location.lat.toFixed(3)}, {h.location.lon.toFixed(3)} · run {day(h.created_at)}</span>
+                            <span className="block text-sm text-ink">{day(h.before.acquired_at)} → {day(h.after.acquired_at)}</span>
+                            <span className="block text-xs text-ink-faint">{h.location.lat.toFixed(3)}, {h.location.lon.toFixed(3)} · run {day(h.created_at)}</span>
                           </span>
-                          <span className="shrink-0 text-sm text-[#b0bed9]">{h.status === "ok" ? `${h.results.changed_area_ha ?? 0} ha` : "no result"}</span>
+                          <span className="shrink-0 text-sm text-ink-muted">{h.status === "ok" ? `${h.results.changed_area_ha ?? 0} ha` : "no result"}</span>
                         </button>
                       </li>
                     ))}

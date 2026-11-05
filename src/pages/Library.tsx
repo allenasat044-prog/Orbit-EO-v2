@@ -87,7 +87,7 @@ export default function Library() {
   if (!token) {
     return (
       <p className="text-muted-foreground">
-        <Link to="/login" className="text-[#8daaff] hover:underline">Log in</Link> or <Link to="/signup" className="text-[#8daaff] hover:underline">sign up</Link> to keep bookmarks.
+        <Link to="/login" className="text-link hover:underline">Log in</Link> or <Link to="/signup" className="text-link hover:underline">sign up</Link> to keep bookmarks.
       </p>
     );
   }
@@ -105,8 +105,8 @@ export default function Library() {
           <Button onClick={() => setBookmarkDialog({ listId: selFolder?.id })}><BookmarkPlus className="size-4" />Add bookmark</Button>
         </div>
       </div>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
-      {notice && <p role="status" className="text-sm text-emerald-400">{notice}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {notice && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">{notice}</p>}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,380px)_1fr]">
         <FileTree
@@ -123,25 +123,25 @@ export default function Library() {
             <div className="space-y-4">
               {selBookmark.caption?.image_url && <img key={selBookmark.id} src={selBookmark.caption.image_url} alt="Satellite preview (image file missing? open Explore and press Refresh image)" className="max-h-64 w-full rounded-xl object-cover" />}
               <div>
-                <h2 className="text-xl font-semibold text-white">{selBookmark.title}</h2>
-                <p className="text-xs text-[#b0bed9]">Saved {day(selBookmark.created_at)}</p>
+                <h2 className="text-xl font-semibold text-ink">{selBookmark.title}</h2>
+                <p className="text-xs text-ink-muted">Saved {day(selBookmark.created_at)}</p>
               </div>
-              {selBookmark.note && <p className="whitespace-pre-wrap text-[#dbe4f7]">{selBookmark.note}</p>}
-              {selBookmark.caption && <p className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-[#b0bed9]"><span className="mr-1 text-xs uppercase tracking-wide text-[#8daaff]">AI caption</span>{selBookmark.caption.text}</p>}
-              <p className="text-sm text-[#b0bed9]">
+              {selBookmark.note && <p className="whitespace-pre-wrap text-ink-soft">{selBookmark.note}</p>}
+              {selBookmark.caption && <p className="rounded-lg border border-line bg-sunk p-3 text-sm text-ink-muted"><span className="mr-1 text-xs uppercase tracking-wide text-link">AI caption</span>{selBookmark.caption.text}</p>}
+              <p className="text-sm text-ink-muted">
                 {selBookmark.location ? (
                   <>
                     {selBookmark.location.lat.toFixed(4)}, {selBookmark.location.lon.toFixed(4)}{" "}
-                    <a className="ml-2 inline-flex items-center gap-1 text-[#8daaff] hover:underline" target="_blank" rel="noopener noreferrer" href={`https://www.openstreetmap.org/?mlat=${selBookmark.location.lat}&mlon=${selBookmark.location.lon}#map=12/${selBookmark.location.lat}/${selBookmark.location.lon}`}>
+                    <a className="ml-2 inline-flex items-center gap-1 text-link hover:underline" target="_blank" rel="noopener noreferrer" href={`https://www.openstreetmap.org/?mlat=${selBookmark.location.lat}&mlon=${selBookmark.location.lon}#map=12/${selBookmark.location.lat}/${selBookmark.location.lon}`}>
                       Open map <ExternalLink className="size-3.5" />
                     </a>
                   </>
                 ) : "No location"}
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 text-sm text-[#b0bed9]">
+                <label className="flex items-center gap-2 text-sm text-ink-muted">
                   Folder
-                  <select value={selBookmark.list_id ?? ""} onChange={(e) => void move(selBookmark, e.target.value)} className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground [color-scheme:dark]">
+                  <select value={selBookmark.list_id ?? ""} onChange={(e) => void move(selBookmark, e.target.value)} className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground">
                     <option value="">Unsorted</option>
                     {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                   </select>
@@ -158,8 +158,8 @@ export default function Library() {
           ) : selFolder ? (
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-semibold text-white">{selFolder.name}</h2>
-                <p className="text-sm text-[#b0bed9]">{items.filter((b) => b.list_id === selFolder.id).length} bookmark(s) in this folder</p>
+                <h2 className="text-xl font-semibold text-ink">{selFolder.name}</h2>
+                <p className="text-sm text-ink-muted">{items.filter((b) => b.list_id === selFolder.id).length} bookmark(s) in this folder</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button size="sm" onClick={() => setBookmarkDialog({ listId: selFolder.id })}><BookmarkPlus className="size-4" />Add bookmark here</Button>
@@ -168,10 +168,10 @@ export default function Library() {
               </div>
             </div>
           ) : (
-            <div className="space-y-2 text-[#b0bed9]">
-              <h2 className="text-lg font-semibold text-white">Your bookmarks</h2>
+            <div className="space-y-2 text-ink-muted">
+              <h2 className="text-lg font-semibold text-ink">Your bookmarks</h2>
               <p className="text-sm">Pick a folder or a bookmark on the left to see it here. Folders keep related places together, just like in your browser.</p>
-              <p className="text-sm">Tip: press “Bookmark” under any caption on the <Link to="/captions" className="text-[#8daaff] hover:underline">Captions</Link> page, or on a pin in the Explore map, and choose which folder to save it in.</p>
+              <p className="text-sm">Tip: press “Bookmark” under any caption on the <Link to="/captions" className="text-link hover:underline">Captions</Link> page, or on a pin in the Explore map, and choose which folder to save it in.</p>
             </div>
           )}
         </Panel>

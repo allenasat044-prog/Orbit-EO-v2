@@ -106,7 +106,7 @@ function ProfileForm({ profile, onClose, onSaved }: { profile: Profile; onClose:
               <div className="relative">
                 <Input id={`${id}-username`} className={`${field} peer pe-9`} placeholder="Username" value={username} maxLength={30} onChange={(e) => setUsername(e.target.value.toLowerCase())} type="text" required aria-invalid={!usernameOk} />
                 <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-muted-foreground/80 peer-disabled:opacity-50">
-                  {usernameOk ? <Check size={16} strokeWidth={2} className="text-emerald-500" aria-label="Username looks good" /> : <X size={16} strokeWidth={2} className="text-red-400" aria-label="Username not valid yet" />}
+                  {usernameOk ? <Check size={16} strokeWidth={2} className="text-emerald-500" aria-label="Username looks good" /> : <X size={16} strokeWidth={2} className="text-red-600 dark:text-red-400" aria-label="Username not valid yet" />}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">3-30 letters, numbers or hyphens.</p>
@@ -134,7 +134,7 @@ function ProfileForm({ profile, onClose, onSaved }: { profile: Profile; onClose:
                 <span className="tabular-nums">{limit - characterCount}</span> characters left
               </p>
             </div>
-            {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           </form>
         </div>
       </div>
@@ -164,7 +164,7 @@ function ProfileBg({ image, onChange }: { image: string | null; onChange: (v: st
             </button>
           )}
         </div>
-        {error && <p role="alert" className="absolute bottom-1 left-2 rounded bg-black/70 px-2 py-0.5 text-xs text-red-300">{error}</p>}
+        {error && <p role="alert" className="absolute bottom-1 left-2 rounded bg-black/70 px-2 py-0.5 text-xs text-red-700 dark:text-red-300">{error}</p>}
       </div>
       <input type="file" ref={fileInputRef} onChange={(e) => void handleFileChange(e)} className="hidden" accept="image/*" aria-label="Upload cover image file" />
     </div>
@@ -183,7 +183,7 @@ function AvatarPicker({ image, name, onChange }: { image: string | null; name: s
         <input type="file" ref={fileInputRef} onChange={(e) => void handleFileChange(e)} className="hidden" accept="image/*" aria-label="Upload profile picture" />
       </div>
       {image && <button type="button" onClick={() => onChange(null)} className="pb-1 text-xs text-muted-foreground hover:text-foreground">Remove photo</button>}
-      {error && <p role="alert" className="pb-1 text-xs text-red-400">{error}</p>}
+      {error && <p role="alert" className="pb-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 }

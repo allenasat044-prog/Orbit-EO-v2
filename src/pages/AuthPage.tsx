@@ -20,7 +20,7 @@ function SocialButton({ provider, label, icon }: { provider: "google" | "github"
   return (
     <a
       href={`/api/auth/oauth/${provider}`}
-      className="inline-flex h-11 items-center justify-center gap-2.5 rounded-xl border border-input bg-background text-sm font-medium text-foreground transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="inline-flex h-11 items-center justify-center gap-2.5 rounded-xl border border-input bg-background text-sm font-medium text-foreground transition-colors hover:bg-wash focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {icon}
       Continue with {label}
@@ -77,8 +77,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
 
   return (
     <div
-      className="dark relative flex min-h-screen flex-col overflow-hidden text-[#f3f6ff]"
-      style={{ background: "radial-gradient(ellipse at 6% 15%,#151e32 0%,#0d1526 50%,#101e38 100%)" }}
+      className="relative z-10 flex min-h-screen flex-col overflow-hidden text-ink"
     >
       <header className="relative z-10 px-[6.5%] py-6">
         <Link to="/" className="text-2xl font-semibold tracking-tight">orbit</Link>
@@ -92,16 +91,16 @@ export default function AuthPage({ mode }: { mode: Mode }) {
           transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
           className="flex flex-col items-center text-center lg:items-start lg:text-left"
         >
-          <span className="mb-4 inline-flex items-center rounded-full border border-[#4773ec]/30 bg-[#4773ec]/10 px-4 py-1.5 text-sm font-medium text-[#8daaff]">
+          <span className="mb-4 inline-flex items-center rounded-full border border-[#4773ec]/30 bg-[#4773ec]/10 px-4 py-1.5 text-sm font-medium text-link">
             {isSignup ? "Join orbit" : "Welcome back"}
           </span>
           <h1 className="text-4xl font-bold leading-tight md:text-5xl">
             {isSignup ? "Start exploring Earth from orbit" : "Log in to orbit"}
           </h1>
-          <p className="mt-4 max-w-md text-base text-[#b0bed9]">
+          <p className="mt-4 max-w-md text-base text-ink-muted">
             Search satellite imagery, generate captions and compare changes over time, all in one place.
           </p>
-          <div className="relative mt-8 h-64 w-full max-w-md overflow-hidden text-[#becbe6]">
+          <div className="relative mt-8 h-64 w-full max-w-md overflow-hidden text-ink-muted">
             <GlobeWireframe
               className="absolute left-0 top-0 aspect-square w-full max-w-full"
               variant="wireframesolid"
@@ -109,7 +108,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
               autoRotateSpeed={0.45}
               strokeWidth={0.6}
             />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0d1526] to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background to-transparent" />
           </div>
         </motion.div>
 
@@ -134,7 +133,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
                 <SocialButton provider="github" label="GitHub" icon={<GitHubIcon />} />
               </div>
               <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground" aria-hidden>
-                <span className="h-px flex-1 bg-white/10" />or with email<span className="h-px flex-1 bg-white/10" />
+                <span className="h-px flex-1 bg-wash-strong" />or with email<span className="h-px flex-1 bg-wash-strong" />
               </div>
               <form onSubmit={onSubmit} className="space-y-4" noValidate>
                 {isSignup && (
@@ -157,7 +156,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
                     <Input id="confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat password" className={field} />
                   </div>
                 )}
-                {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+                {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
                 {error === "Invalid email or password." && !isSignup && (
                   <p className="text-xs text-muted-foreground">Signed up with Google or GitHub? Use the buttons above instead.</p>
                 )}
@@ -168,7 +167,7 @@ export default function AuthPage({ mode }: { mode: Mode }) {
               </form>
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 {isSignup ? "Already have an account? " : "New to orbit? "}
-                <Link to={isSignup ? "/login" : "/signup"} className="text-[#8daaff] hover:underline">
+                <Link to={isSignup ? "/login" : "/signup"} className="text-link hover:underline">
                   {isSignup ? "Log in" : "Create an account"}
                 </Link>
               </p>

@@ -14,7 +14,7 @@ export function ChangeResult({ a }: { a: ChangeAnalysis }) {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold text-white">Change between {day(a.before.acquired_at)} and {day(a.after.acquired_at)}</h3>
+        <h3 className="text-lg font-semibold text-ink">Change between {day(a.before.acquired_at)} and {day(a.after.acquired_at)}</h3>
         <p className={muted}>
           {a.before.platform ?? "scene"} to {a.after.platform ?? "scene"} · around {a.location.lat.toFixed(4)}, {a.location.lon.toFixed(4)}
         </p>
@@ -29,7 +29,7 @@ export function ChangeResult({ a }: { a: ChangeAnalysis }) {
         showChanges={showChanges}
       />
       {a.overlay_url && (
-        <label className="mx-auto flex w-fit items-center gap-2 text-sm text-[#b0bed9]">
+        <label className="mx-auto flex w-fit items-center gap-2 text-sm text-ink-muted">
           <input type="checkbox" checked={showChanges} onChange={(e) => setShowChanges(e.target.checked)} className="accent-[#8daaff]" />
           Highlight changed areas
         </label>
@@ -44,13 +44,13 @@ export function ChangeResult({ a }: { a: ChangeAnalysis }) {
           </div>
           {transitions.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-white">What it changed into</h4>
+              <h4 className="font-medium text-ink">What it changed into</h4>
               <ul className="space-y-2">
                 {transitions.map((t) => (
                   <li key={`${t.from}-${t.to}`} className="grid grid-cols-[minmax(0,14rem)_1fr_auto] items-center gap-3 text-sm">
-                    <span className="truncate text-[#dbe4f7]">{t.from} → {t.to}</span>
+                    <span className="truncate text-ink-soft">{t.from} → {t.to}</span>
                     <Bar value={t.area_ha} max={top} label={`${t.area_ha} hectares`} />
-                    <span className="tabular-nums text-[#b0bed9]">{t.area_ha} ha</span>
+                    <span className="tabular-nums text-ink-muted">{t.area_ha} ha</span>
                   </li>
                 ))}
               </ul>
@@ -62,11 +62,11 @@ export function ChangeResult({ a }: { a: ChangeAnalysis }) {
       )}
 
       {a.notes.length > 0 && (
-        <ul className="list-disc space-y-1 pl-5 text-sm text-[#b0bed9]">
+        <ul className="list-disc space-y-1 pl-5 text-sm text-ink-muted">
           {a.notes.map((n) => <li key={n}>{n}</li>)}
         </ul>
       )}
-      <p className="text-xs text-[#7f8db0]">{a.method} {a.caveat}</p>
+      <p className="text-xs text-ink-faint">{a.method} {a.caveat}</p>
     </div>
   );
 }

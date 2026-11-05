@@ -21,7 +21,7 @@ export default function AuthCallback() {
   }, [nav]);
 
   return (
-    <div className="dark grid min-h-screen place-items-center bg-[#0d1526] text-[#b0bed9]">
+    <div className="grid min-h-screen place-items-center bg-background text-ink-muted">
       <MorphingSquare className="h-8 w-8" message="Signing you in…" />
     </div>
   );

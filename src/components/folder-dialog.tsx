@@ -49,7 +49,7 @@ function FolderForm({ folder, onClose, onSaved }: { folder?: ListItem; onClose: 
         <Label htmlFor="folder-name">Folder name</Label>
         <Input id="folder-name" autoFocus className="rounded-lg border border-input focus-visible:ring-2 focus-visible:ring-ring" value={name} maxLength={60} placeholder="e.g. Flood zones" onChange={(e) => setName(e.target.value)} />
       </div>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <DialogFooter>
         <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
         <Button type="submit" disabled={busy}><BusyLabel busy={busy} busyText="Saving…">{folder ? "Rename" : "Create folder"}</BusyLabel></Button>

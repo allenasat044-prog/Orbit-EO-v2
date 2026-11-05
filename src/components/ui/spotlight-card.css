@@ -68,3 +68,9 @@
     display: none;
   }
 }
+
+/* On the light theme the brightened border would wash out, so keep its true colour. */
+html:not(.dark) [data-glow]::before,
+html:not(.dark) [data-glow-halo]::before {
+  filter: none;
+}

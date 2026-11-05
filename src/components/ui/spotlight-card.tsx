@@ -92,7 +92,7 @@ const GlowCard: React.FC<GlowCardProps> = ({
   as,
   radius = 16,
   borderSize = 2,
-  backdrop = "hsl(0 0% 60% / 0.08)",
+  backdrop = "var(--glow-backdrop, hsl(0 0% 60% / 0.08))",
   style,
   ...rest
 }) => {
@@ -109,7 +109,7 @@ const GlowCard: React.FC<GlowCardProps> = ({
     "--radius": radius,
     "--border": borderSize,
     "--backdrop": backdrop,
-    "--backup-border": "hsl(0 0% 60% / 0.16)",
+    "--backup-border": "var(--glow-border, hsl(0 0% 60% / 0.16))",
     "--size": "200",
     "--outer": "1",
     "--border-size": "calc(var(--border, 2) * 1px)",
@@ -138,7 +138,7 @@ const GlowCard: React.FC<GlowCardProps> = ({
       data-glow
       style={inline}
       className={cn(
-        "relative rounded-2xl shadow-[0_1rem_2rem_-1rem_black] backdrop-blur-[5px]",
+        "relative rounded-2xl shadow-[0_1rem_2rem_-1rem_var(--glow-shadow,black)] backdrop-blur-[5px]",
         customSize ? "p-5" : cn(sizeMap[size], "aspect-[3/4] grid grid-rows-[1fr_auto] gap-4 p-4"),
         className,
       )}

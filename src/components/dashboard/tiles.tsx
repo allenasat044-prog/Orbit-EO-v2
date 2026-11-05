@@ -4,6 +4,7 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { Bookmark, MapPin, RefreshCw, Sparkles } from "lucide-react";
 import { EASE, Pills, Tile, cx, smooth, useCountUp, useMounted } from "@/components/ui/bento";
+import { useTheme } from "@/lib/theme";
 import { MorphingSquare } from "@/components/ui/morphing-square";
 import type { DayOutlook } from "@/lib/cloud-outlook";
 import type { Records } from "@/lib/library";
@@ -275,11 +276,15 @@ function LocationStack({ regions, total, title, reduced }: { regions: Region[]; 
 /*  Sky: cloud cover gauge for the first monitored place               */
 /* ------------------------------------------------------------------ */
 
-const TONE = { good: "#6ee7b7", fair: "#fcd34d", poor: "#fca5a5", unknown: "var(--color-muted-foreground)" } as const;
+const TONES = {
+  dark: { good: "#6ee7b7", fair: "#fcd34d", poor: "#fca5a5", unknown: "var(--color-muted-foreground)" },
+  light: { good: "#0f9d77", fair: "#c98a00", poor: "#d64545", unknown: "var(--color-muted-foreground)" },
+} as const;
 const DAYS = ["Today", "Tomorrow", "Day 3"] as const;
 
 export function SkyTile({ days, place, personal, forecast }: { days: DayOutlook[]; place: string; personal: Personal | null | undefined; forecast: unknown }) {
   const [day, setDay] = React.useState<(typeof DAYS)[number]>("Today");
+  const theme = useTheme();
   const title = place ? `Sky · ${place}` : "Sky";
   const cls = "lg:col-start-4 lg:row-start-1";
   if (personal === undefined || (personal && personal.regions.length > 0 && forecast === undefined)) return <Tile title={title} className={cls}><Loading /></Tile>;
@@ -293,7 +298,7 @@ export function SkyTile({ days, place, personal, forecast }: { days: DayOutlook[
   const R = 62;
   const len = Math.PI * R;
   const angle = -90 + t * 180;
-  const color = TONE[d.tone];
+  const color = TONES[theme][d.tone];
 
   return (
     <Tile title={title} className={cls} action={<span className="font-mono text-[11px] text-muted-foreground">forecast</span>}>
@@ -632,7 +637,6 @@ export function RunsTile({ runs, accent, accent2, reduced }: Colors & { runs: Ru
             {last ? `latest: ${last.new_acquisitions} new scene${last.new_acquisitions === 1 ? "" : "s"} · ${last.captions_created} caption${last.captions_created === 1 ? "" : "s"}` : "Run a check from Explore to start"}
           </p>
         </div>
-        <Link to="/updates" className="font-mono text-[11px] text-muted-foreground underline underline-offset-4 hover:text-foreground">History</Link>
       </div>
       <div className="mt-4 flex flex-1 items-end gap-[3px]" style={{ minHeight: 64 }} aria-hidden>
         {ordered.length === 0 && <span className="m-auto text-sm text-muted-foreground">Nothing to show yet</span>}

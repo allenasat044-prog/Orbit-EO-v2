@@ -707,7 +707,7 @@ export default function Explore() {
   return (
     <div className="flex items-start gap-4">
       {sidebarOpen && (
-        <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-[260px] shrink-0 overflow-hidden rounded-xl border border-border/50 bg-card/50 shadow-sm ring-1 ring-white/5 lg:block" aria-label="Explore tools">
+        <Panel as="aside" radius={12} style={{ position: "sticky" }} className="top-4 hidden h-[calc(100vh-2rem)] w-[260px] shrink-0 rounded-xl p-0 lg:block" aria-label="Explore tools"><div className="h-full overflow-hidden rounded-[10px]">
           <SidebarNav
             className="border-none bg-transparent"
             groups={navGroups}
@@ -723,44 +723,44 @@ export default function Explore() {
               action: { label: "Monitor this location", onClick: () => void monitorHere() },
             }}
           />
-        </aside>
+        </div></Panel>
       )}
       <div className="min-w-0 flex-1 space-y-4">
       <div className="flex items-center gap-4" data-explore-search>
-        <button type="button" onClick={() => setSidebarOpen((v) => !v)} aria-label={sidebarOpen ? "Hide tools panel" : "Show tools panel"} className="hidden rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground lg:inline-flex">
+        <button type="button" onClick={() => setSidebarOpen((v) => !v)} aria-label={sidebarOpen ? "Hide tools panel" : "Show tools panel"} className="hidden rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-wash hover:text-foreground lg:inline-flex">
           {sidebarOpen ? <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={1.5} /> : <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />}
         </button>
         <SearchGroup onSearch={onSearch} /><span className="text-sm text-muted-foreground">{msg}</span>
       </div>
-      <div ref={el} className="h-[70vh] w-full overflow-hidden rounded-2xl border border-white/10" />
+      <Panel className="p-0"><div ref={el} className="h-[70vh] w-full overflow-hidden rounded-[14px]" /></Panel>
       {point && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void refreshArea()} title="Search for scenes over the pin again and cut a brand-new preview, even if one is already saved" className="flex items-center gap-1.5 rounded-md border border-[#8daaff]/50 bg-[#8daaff]/10 px-2 py-1 text-xs font-medium text-[#8daaff] disabled:text-muted-foreground">
+          <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void refreshArea()} title="Search for scenes over the pin again and cut a brand-new preview, even if one is already saved" className="flex items-center gap-1.5 rounded-md border border-link/50 bg-link/10 px-2 py-1 text-xs font-medium text-link disabled:text-muted-foreground">
             {!refreshBusy && <RefreshCw className="size-3" />}<BusyLabel busy={refreshBusy} busyText="Refreshing…" size="h-3 w-3">Fresh run: re-check area</BusyLabel>
           </button>
-          <button type="button" disabled={monitorBusy} onClick={() => void monitorHere()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
+          <button type="button" disabled={monitorBusy} onClick={() => void monitorHere()} className="rounded-md border border-line px-2 py-1 text-xs text-link disabled:text-muted-foreground">
             <BusyLabel busy={monitorBusy} busyText="Saving…" size="h-3 w-3">Monitor this location</BusyLabel>
           </button>
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <input type="checkbox" checked={autoCaption} onChange={(e) => setAutoCaption(e.target.checked)} />
             also describe new scenes
           </label>
-          <button type="button" onClick={openInAnalysis} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
+          <button type="button" onClick={openInAnalysis} className="rounded-md border border-line px-2 py-1 text-xs text-link">
             Open in Analysis
           </button>
-          <button type="button" onClick={bookmarkHere} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
+          <button type="button" onClick={bookmarkHere} className="rounded-md border border-line px-2 py-1 text-xs text-link">
             Bookmark this location
           </button>
-          <button type="button" onClick={() => void openWeatherPopup()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff]">
+          <button type="button" onClick={() => void openWeatherPopup()} className="rounded-md border border-line px-2 py-1 text-xs text-link">
             Weather widget
           </button>
-          <button type="button" disabled={weatherBusy} onClick={() => void loadWeather()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
+          <button type="button" disabled={weatherBusy} onClick={() => void loadWeather()} className="rounded-md border border-line px-2 py-1 text-xs text-link disabled:text-muted-foreground">
             <BusyLabel busy={weatherBusy} busyText="Loading…" size="h-3 w-3">Weather chart</BusyLabel>
           </button>
-          <button type="button" disabled={analysisBusy || !beforeItem || !afterItem} onClick={() => void analyzeChange()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
+          <button type="button" disabled={analysisBusy || !beforeItem || !afterItem} onClick={() => void analyzeChange()} className="rounded-md border border-line px-2 py-1 text-xs text-link disabled:text-muted-foreground">
             {analysisBusy ? "Analysing…" : "Analyse change"}
           </button>
-          <button type="button" disabled={runBusy} onClick={() => void runUpdate()} className="rounded-md border border-white/10 px-2 py-1 text-xs text-[#8daaff] disabled:text-muted-foreground">
+          <button type="button" disabled={runBusy} onClick={() => void runUpdate()} className="rounded-md border border-line px-2 py-1 text-xs text-link disabled:text-muted-foreground">
             <BusyLabel busy={runBusy} busyText="Checking…" size="h-3 w-3">Check for new scenes now</BusyLabel>
           </button>
         </div>
@@ -774,7 +774,7 @@ export default function Explore() {
           <Panel className="space-y-3 p-3">
             <div className="flex items-center justify-between text-sm">
               <span>Weather at the pin · {forecast.location.timezone ?? "local time"} time</span>
-              <button type="button" onClick={() => setForecast(null)} className="text-xs text-muted-foreground hover:text-white">Close</button>
+              <button type="button" onClick={() => setForecast(null)} className="text-xs text-muted-foreground hover:text-ink">Close</button>
             </div>
             <div className="space-y-1 text-sm">
               <p className="font-medium">{h.time[i].replace("T", " ")} · {h.summary[i]}</p>
@@ -801,17 +801,17 @@ export default function Explore() {
             <p className="text-xs text-muted-foreground">Orange line: temperature (left scale). Grey dashed line: cloud cover (right scale, 0 to 100%). Blue bars: rain.</p>
             <div className="grid grid-cols-3 gap-2 text-xs">
               {forecast.daily.date.map((d, k) => (
-                <div key={d} className="rounded-lg border border-white/10 p-2">
+                <Panel key={d} radius={8} className="rounded-lg p-2">
                   <p className="font-medium">{d}</p>
                   <p className="text-muted-foreground">{forecast.daily.summary[k]}</p>
                   <p>{show(forecast.daily.tmax_c[k], "°")} / {show(forecast.daily.tmin_c[k], "°")}</p>
                   <p className="text-muted-foreground">Rain {show(forecast.daily.precipitation_mm[k], " mm")}</p>
-                </div>
+                </Panel>
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
               Model forecast for roughly an 11 km area around the pin, not a measurement. Cloud cover helps judge whether a new satellite scene will be clear.{" "}
-              <a href={forecast.source.url} target="_blank" rel="noreferrer" className="text-[#8daaff] underline">{forecast.source.attribution}</a> (CC BY 4.0).
+              <a href={forecast.source.url} target="_blank" rel="noreferrer" className="text-link underline">{forecast.source.attribution}</a> (CC BY 4.0).
             </p>
           </Panel>
         );
@@ -824,7 +824,7 @@ export default function Explore() {
               key={z.px}
               type="button"
               onClick={() => setZoomPx(z.px)}
-              className={`rounded-md border px-2 py-1 text-xs ${zoomPx === z.px ? "border-[#8daaff] text-[#8daaff]" : "border-white/10 text-muted-foreground"}`}
+              className={`rounded-md border px-2 py-1 text-xs ${zoomPx === z.px ? "border-link text-link" : "border-line text-muted-foreground"}`}
             >
               {z.name} · {z.km}
             </button>
@@ -834,21 +834,21 @@ export default function Explore() {
       {items.length > 0 && (
         <ul className="max-h-60 space-y-1 overflow-auto text-sm">
           {items.map((i) => (
-            <li key={i.external_id} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${activeItem?.external_id === i.external_id ? "border-[#8daaff]/50" : "border-white/10"}`}>
-              <button type="button" className="text-left hover:text-[#8daaff]" onClick={() => { focus(i); setActiveItem(i); }}>
+            <Panel as="li" key={i.external_id} radius={8} className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 ${activeItem?.external_id === i.external_id ? "ring-1 ring-link/60" : ""}`}>
+              <button type="button" className="text-left hover:text-link" onClick={() => { focus(i); setActiveItem(i); }}>
                 {new Date(i.acquired_at).toISOString().slice(0, 10)} · {i.platform ?? i.collection} · {i.cloud_cover != null ? `${i.cloud_cover.toFixed(0)}% cloud` : "no cloud data"}{i.gsd ? ` · ${i.gsd} m` : ""}
               </button>
               <span className="flex items-center gap-3">
-                <button type="button" onClick={() => setBeforeItem(beforeItem?.external_id === i.external_id ? null : i)} className={`text-xs ${beforeItem?.external_id === i.external_id ? "font-semibold text-[#8daaff]" : "text-muted-foreground hover:text-white"}`}>Before</button>
-                <button type="button" onClick={() => setAfterItem(afterItem?.external_id === i.external_id ? null : i)} className={`text-xs ${afterItem?.external_id === i.external_id ? "font-semibold text-[#8daaff]" : "text-muted-foreground hover:text-white"}`}>After</button>
-                <button type="button" disabled={chipBusy !== null} onClick={() => void previewChip(i)} className="text-xs text-[#8daaff] disabled:text-muted-foreground">
+                <button type="button" onClick={() => setBeforeItem(beforeItem?.external_id === i.external_id ? null : i)} className={`text-xs ${beforeItem?.external_id === i.external_id ? "font-semibold text-link" : "text-muted-foreground hover:text-ink"}`}>Before</button>
+                <button type="button" onClick={() => setAfterItem(afterItem?.external_id === i.external_id ? null : i)} className={`text-xs ${afterItem?.external_id === i.external_id ? "font-semibold text-link" : "text-muted-foreground hover:text-ink"}`}>After</button>
+                <button type="button" disabled={chipBusy !== null} onClick={() => void previewChip(i)} className="text-xs text-link disabled:text-muted-foreground">
                   {chipBusy === i.external_id ? "Working…" : "Preview"}
                 </button>
-                <button type="button" disabled={i.ingested} onClick={() => void register(i)} className="text-xs text-[#8daaff] disabled:text-muted-foreground">
+                <button type="button" disabled={i.ingested} onClick={() => void register(i)} className="text-xs text-link disabled:text-muted-foreground">
                   {i.ingested ? "Registered" : "Register"}
                 </button>
               </span>
-            </li>
+            </Panel>
           ))}
         </ul>
       )}
@@ -857,11 +857,11 @@ export default function Explore() {
           <div className="flex items-center justify-between text-sm">
             <span>{chip.label} · {chip.width_px}×{chip.height_px} px{chip.gsd_m ? ` · ${chip.gsd_m} m/px` : ""}</span>
             <span className="flex items-center gap-3">
-              <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void (chipItem ? previewChip(chipItem, true) : refreshArea())} title="Cut this preview again from the scene" className="text-xs text-[#8daaff] disabled:text-muted-foreground"><BusyLabel busy={chipBusy !== null || refreshBusy} busyText="Refreshing…" size="h-3 w-3">Refresh image</BusyLabel></button>
-              <button type="button" disabled={captionBusy} onClick={() => void describeChip()} className="text-xs text-[#8daaff] disabled:text-muted-foreground"><BusyLabel busy={captionBusy} busyText="Describing…" size="h-3 w-3">Describe this image</BusyLabel></button>
-              <button type="button" disabled={compareBusy} onClick={() => void compareModels()} className="text-xs text-[#8daaff] disabled:text-muted-foreground"><BusyLabel busy={compareBusy} busyText="Comparing…" size="h-3 w-3">Compare models</BusyLabel></button>
-              <button type="button" onClick={() => setSmooth((v) => !v)} className="text-xs text-[#8daaff]">{smooth ? "Show pixels" : "Smooth"}</button>
-              <button type="button" onClick={closeChip} className="text-xs text-muted-foreground hover:text-white">Close preview</button>
+              <button type="button" disabled={refreshBusy || chipBusy !== null} onClick={() => void (chipItem ? previewChip(chipItem, true) : refreshArea())} title="Cut this preview again from the scene" className="text-xs text-link disabled:text-muted-foreground"><BusyLabel busy={chipBusy !== null || refreshBusy} busyText="Refreshing…" size="h-3 w-3">Refresh image</BusyLabel></button>
+              <button type="button" disabled={captionBusy} onClick={() => void describeChip()} className="text-xs text-link disabled:text-muted-foreground"><BusyLabel busy={captionBusy} busyText="Describing…" size="h-3 w-3">Describe this image</BusyLabel></button>
+              <button type="button" disabled={compareBusy} onClick={() => void compareModels()} className="text-xs text-link disabled:text-muted-foreground"><BusyLabel busy={compareBusy} busyText="Comparing…" size="h-3 w-3">Compare models</BusyLabel></button>
+              <button type="button" onClick={() => setSmooth((v) => !v)} className="text-xs text-link">{smooth ? "Show pixels" : "Smooth"}</button>
+              <button type="button" onClick={closeChip} className="text-xs text-muted-foreground hover:text-ink">Close preview</button>
             </span>
           </div>
           <div className="relative inline-block w-full max-w-[512px]">
@@ -877,20 +877,20 @@ export default function Explore() {
             />
           </div>
           {chipBroken && (
-            <p role="alert" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <p role="alert" className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-800 dark:text-amber-200">
               This saved image could not be loaded, even after trying to rebuild it. Press “Refresh image” to cut it again. If that fails, check that the API and the ML service are running.
             </p>
           )}
           {caption && (
-            <div className="space-y-1 rounded-lg border border-white/10 p-3 text-sm">
+            <Panel radius={8} className="space-y-1 rounded-lg p-3 text-sm">
               <p>{caption.text}</p>
               <p className="text-xs text-muted-foreground">
                 AI-generated by {caption.checkpoint}{caption.device ? ` on ${caption.device}` : ""}{caption.latencyMs != null ? ` in ${(caption.latencyMs / 1000).toFixed(1)} s` : ""}. This is a general-purpose model, not trained on satellite imagery, so treat it as a rough description, not a measurement.
               </p>
-            </div>
+            </Panel>
           )}
           {comparison && (
-            <div className="space-y-2 rounded-lg border border-white/10 p-3 text-sm">
+            <Panel radius={8} className="space-y-2 rounded-lg p-3 text-sm">
               {comparison.scene_tags && (
                 <p>
                   <span className="text-muted-foreground">Scene tags (GeoRSCLIP): </span>
@@ -917,7 +917,7 @@ export default function Explore() {
                 </p>
               )}
               <p className="text-xs text-muted-foreground">AI-generated. Image match is a rough similarity between the image and each caption, not a measure of truth.</p>
-            </div>
+            </Panel>
           )}
           <p className="text-xs text-muted-foreground">
             North is up and the red ring is your pin. Each pixel covers about {chip.gsd_m ?? 10} × {chip.gsd_m ?? 10} m on the ground, which is the finest detail Sentinel-2 true colour has: roads, fields, water and large buildings show, but not individual houses or cars.
@@ -929,8 +929,8 @@ export default function Explore() {
           <div className="flex items-center justify-between text-sm">
             <span>Change between {analysis.before.acquired_at.slice(0, 10)} and {analysis.after.acquired_at.slice(0, 10)}</span>
             <span className="flex items-center gap-3">
-              {analysis.overlay_url && <button type="button" onClick={toggleChanges} className="text-xs text-[#8daaff]">{showChanges ? "Hide changes on globe" : "Show changes on globe"}</button>}
-              <button type="button" onClick={closeAnalysis} className="text-xs text-muted-foreground hover:text-white">Close</button>
+              {analysis.overlay_url && <button type="button" onClick={toggleChanges} className="text-xs text-link">{showChanges ? "Hide changes on globe" : "Show changes on globe"}</button>}
+              <button type="button" onClick={closeAnalysis} className="text-xs text-muted-foreground hover:text-ink">Close</button>
             </span>
           </div>
           <div className="grid max-w-[640px] grid-cols-2 gap-2">
@@ -964,7 +964,7 @@ export default function Explore() {
           <p className="text-xs text-muted-foreground">Measured by image analysis, not AI. Areas are approximate, and a difference between two images is not a confirmed real-world event: lighting, season, haze and alignment can all create apparent change.</p>
         </Panel>
       )}
-      {next && <button type="button" disabled={busy} onClick={loadMore} className="text-sm text-[#8daaff] disabled:text-muted-foreground">Load more</button>}
+      {next && <button type="button" disabled={busy} onClick={loadMore} className="text-sm text-link disabled:text-muted-foreground">Load more</button>}
       {credit && <p className="text-xs text-muted-foreground">{credit}</p>}
       <WeatherPopup
         open={weatherOpen}

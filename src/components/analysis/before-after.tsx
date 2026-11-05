@@ -7,7 +7,7 @@ export function BeforeAfter({ beforeUrl, afterUrl, beforeLabel, afterLabel, over
   const [pos, setPos] = useState(50);
   return (
     <div className="space-y-2">
-      <div className="relative mx-auto aspect-square w-full max-w-xl select-none overflow-hidden rounded-xl border border-white/10 bg-black">
+      <div className="relative mx-auto aspect-square w-full max-w-xl select-none overflow-hidden rounded-xl border border-line bg-black">
         <img src={afterUrl} alt={`After: ${afterLabel}`} className="absolute inset-0 h-full w-full object-cover" />
         {overlayUrl && showChanges && <img src={overlayUrl} alt="Areas flagged as changed" className="absolute inset-0 h-full w-full object-cover" />}
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>

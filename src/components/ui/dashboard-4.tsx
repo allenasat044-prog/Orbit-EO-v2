@@ -1,8 +1,9 @@
 "use client";
 
 import { Link } from "react-router-dom";
-import { BarChart3, Globe2, History, MessageSquare } from "lucide-react";
+import { BarChart3, Globe2, MessageSquare } from "lucide-react";
 import { useReducedMotion } from "@/components/ui/bento";
+import { useTheme } from "@/lib/theme";
 import { MorphingSquare } from "@/components/ui/morphing-square";
 import { skyDays } from "@/components/dashboard/data";
 import { useDashboard } from "@/components/dashboard/use-dashboard";
@@ -12,18 +13,24 @@ import { ActivityTile, HeroTile, LibraryTile, LocationsTile, MonitoringTile, Run
  * The dashboard, in the bento layout of the 21st.dev "web3-bento" component (by @romanvasnev),
  * showing Orbit EO's own numbers: update runs, monitored places, the sky over them and system health.
  */
-const ACCENT = "oklch(0.76 0.12 268)"; // the app's periwinkle blue
-const ACCENT2 = "oklch(0.74 0.12 320)"; // a warm lilac for failures and warnings
+// Colours for lines, bars and highlights. Deeper on the light theme so they stay readable on white.
+const COLORS = {
+  dark: { accent: "oklch(0.76 0.12 268)", accent2: "oklch(0.74 0.12 320)" },
+  light: { accent: "oklch(0.5 0.18 268)", accent2: "oklch(0.55 0.18 330)" },
+};
+// The solid "Monitoring" tile is the same soft blue in both themes, with dark text on it.
+const TILE_ACCENT = "oklch(0.78 0.11 268)";
 
 const SHORTCUTS = [
   { to: "/explore", label: "Explore globe", icon: Globe2 },
   { to: "/captions", label: "Generate captions", icon: MessageSquare },
   { to: "/analysis", label: "Compare dates", icon: BarChart3 },
-  { to: "/updates", label: "Update history", icon: History },
 ] as const;
 
 export function Dashboard() {
   const reduced = useReducedMotion();
+  const theme = useTheme();
+  const { accent: ACCENT, accent2: ACCENT2 } = COLORS[theme];
   const d = useDashboard();
 
   if (d.runs === null) {
@@ -55,7 +62,7 @@ export function Dashboard() {
       </nav>
 
       {d.publicError && (
-        <p role="alert" className="mb-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-200">
+        <p role="alert" className="mb-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-800 dark:text-amber-200">
           Could not load the update history: {d.publicError}
         </p>
       )}
@@ -67,7 +74,7 @@ export function Dashboard() {
         <TrendTile runs={d.runs} accent={ACCENT} reduced={reduced} />
         <LibraryTile personal={d.personal} accent={ACCENT} accent2={ACCENT2} />
         <MonitoringTile
-          accent={ACCENT}
+          accent={TILE_ACCENT}
           runs={d.runs}
           status={d.status}
           locations={d.personal ? d.personal.regions.length : null}

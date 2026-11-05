@@ -51,14 +51,14 @@ This README describes everything built so far, how it fits together, how to run 
 | 6b | GeoRSCLIP scene tags, caption match scores, Compare models | Delivered, real weights not yet run on your Mac |
 | 7 | Historical change (same pin across dates, change maps) | Planned |
 | 8 | Weather forecast | Planned |
-| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | completed |
-| FIX | One bookmark per place (with a Merge duplicates button), and a full Analysis page: image description, model comparison, historical change with a history list, and weather with a satellite clarity outlook | Completed  |
-| POLISH | Interface polish using 21st.dev components. Done so far: spotlight cards, a bento Dashboard, and a morphing-square loader everywhere | majorly its Done only theme is lefting |
+| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | Delivered, awaiting your test |
+| FIX | One bookmark per place (with a Merge duplicates button), and a full Analysis page: image description, model comparison, historical change with a history list, and weather with a satellite clarity outlook | Delivered, awaiting your test |
+| POLISH | Interface polish using 21st.dev components: spotlight cards, a bento Dashboard, the morphing-square loader, a light and dark theme, the topography page background and a signed-in account menu | Delivered, awaiting your test |
 | 10 | Automation and hardening (scheduled runs, API docs, security review) | Planned |
 | Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | Planned |
 | Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | Planned |
 
-The **Library** (bookmarks) and **Profile** pages are new in stage 9, with a Profile button next to Log in and Sign up. The **Updates** page is still a placeholder.
+The **Library** (bookmarks) and **Profile** pages are new in stage 9, with a Profile button next to Log in and Sign up.
 
 ## How it fits together
 
@@ -334,6 +334,12 @@ The Dashboard uses the bento layout of the 21st.dev "web3-bento" component, fill
 | Recent activity | Your latest captions, bookmarks, locations and runs (public runs if you are logged out). |
 
 Loading uses the morphing square (`src/components/ui/morphing-square.tsx`). For a button that can be busy, wrap its label in `BusyLabel` (`src/components/ui/busy-label.tsx`).
+
+### Theme, background and account menu (POLISH)
+
+- **Theme.** The sun/moon button next to Profile switches between the light and dark theme. The choice is remembered on this computer; until you choose, the page follows your computer's own setting. All colours come from theme tokens in `src/index.css` (`text-ink`, `text-ink-muted`, `border-line`, `bg-surface`, `text-link` and so on), so a new component should use those, not fixed colours.
+- **Background.** Every page except the landing page (which has its own scene) and the FAQ page (which keeps its plain grid) has slowly moving contour lines behind it. They rise under the mouse and ripple when you click empty space. It is drawn at 30 frames a second and a lower resolution to be easy on laptops, pauses when the tab is hidden, and holds still if your system asks for reduced motion. It lives in `src/components/app-background.tsx`; add a path to `PLAIN` or `OWN_SCENE` there to switch it off for a page.
+- **Signed in.** Once you log in, Log in and Sign up are replaced by your picture and first name with a green dot. Its menu has Profile, Bookmarks and Log out. A login the server no longer accepts is cleared automatically, so the header never shows a login that has expired.
 
 ### Spotlight cards (POLISH)
 
