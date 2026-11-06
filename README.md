@@ -35,7 +35,7 @@ This README describes everything built so far, how it fits together, how to run 
 
 ## Status at a glance
 
-"Confirmed" means you ran it on your own Mac and told me it works. "Delivered" means the code is written and tested in my sandbox but you have not confirmed it yet.
+"Confirmed" means Done + Tested 
 
 | Stage | What | Status |
 |---|---|---|
@@ -46,17 +46,17 @@ This README describes everything built so far, how it fits together, how to run 
 | 4b | AI captions with SmolVLM-Instruct (warm-up confirmed on your Mac, Apple GPU) | Confirmed |
 | 4c | Captions page: list and delete saved captions | Confirmed |
 | 4d | Sharper previews (1024 px display image) | Delivered, feedback pending |
-| 5 | Monitored locations and update runs feeding the Dashboard | Delivered, awaiting your test |
+| 5 | Monitored locations and update runs feeding the Dashboard | Delivered,|
 | 6a | Research model registry: EarthGPT, SkySenseGPT, TerraScope, RS-LLaVA, MTRS paper recorded honestly as unavailable, with reasons | Delivered |
-| 6b | GeoRSCLIP scene tags, caption match scores, Compare models | Delivered, real weights not yet run on your Mac |
-| 7 | Historical change (same pin across dates, change maps) | Planned |
-| 8 | Weather forecast | Planned |
-| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | Delivered, awaiting your test |
-| FIX | One bookmark per place (with a Merge duplicates button), and a full Analysis page: image description, model comparison, historical change with a history list, and weather with a satellite clarity outlook | Delivered, awaiting your test |
-| POLISH | Interface polish using 21st.dev components: spotlight cards, a bento Dashboard, the morphing-square loader, a light and dark theme, the topography page background and a signed-in account menu | Delivered, awaiting your test |
+| 6b | GeoRSCLIP scene tags, caption match scores, Compare models | Delivered,  |
+| 7 | Historical change (same pin across dates, change maps) | Delivered |
+| 8 | Weather forecast | Delivered |
+| 9 | Personal library: Bookmarks page (folders shown as a tree; saving asks which folder) and a basic Profile page (photo, cover, name, username, email, location, website, bio) | Delivered |
+| FIX | One bookmark per place (with a Merge duplicates button), and a full Analysis page: image description, model comparison, historical change with a history list, and weather with a satellite clarity outlook | Delivered |
+| POLISH | Interface polish using 21st.dev components: spotlight cards, a bento Dashboard, the morphing-square loader, a light and dark theme, the topography page background and a signed-in account menu | Delivered, can reduce the refresh rate to 60hz for more smooth for low spec. system |
 | 10 | Automation and hardening (scheduled runs, API docs, security review) | Planned |
 | Hosting | Vercel + Supabase, Google and GitHub sign-in, SEO, one URL | Planned |
-| Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | Planned |
+| Final | Frontend enhancement (Dock, Slidebar, search bar, background, themes, profile page, F&Q) | majorly done & tested (more is coming) |
 
 The **Library** (bookmarks) and **Profile** pages are new in stage 9, with a Profile button next to Log in and Sign up.
 
