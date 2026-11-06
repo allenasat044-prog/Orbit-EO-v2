@@ -1,7 +1,7 @@
 import { JobError } from "../imagery/chipJob.js";
 import { promptKey } from "./repo.js";
 
-export const DEFAULT_MODEL_ID = "smolvlm-instruct";
+export const DEFAULT_MODEL_ID = process.env.CAPTION_MODEL_ID || "smolvlm-instruct";
 
 export function createCaptionHandler({ chips, captions, mlCaption, storage }) {
   return async function generateCaption({ chip_id, model_id = DEFAULT_MODEL_ID, prompt = null }, { userId } = {}) {

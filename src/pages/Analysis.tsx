@@ -331,9 +331,6 @@ export default function Analysis() {
                                 </Panel>
                               ))}
                             </ul>
-                            {comparison.unavailable.length > 0 && (
-                              <p className="text-xs text-ink-faint">Not available on this machine: {comparison.unavailable.map((u, i) => <span key={u.model_id} title={u.reason}>{u.name}{i < comparison.unavailable.length - 1 ? ", " : ""}</span>)}. Hover a name for the reason.</p>
-                            )}
                             <p className="text-xs text-ink-faint">AI-generated. Image match is a rough similarity between the image and each caption, not a measure of truth.</p>
                           </div>
                         )}

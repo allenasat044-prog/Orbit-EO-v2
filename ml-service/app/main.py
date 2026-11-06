@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
 import platform
+import sys
 
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -114,15 +117,85 @@ class CaptionRequest(BaseModel):
     prompt: str | None = Field(default=None, max_length=1000)
 
 
+FALLBACK_CAPTION_MODEL = "smolvlm-instruct"
+
+
+def _free_memory() -> None:
+    import gc
+
+    gc.collect()
+    try:
+        import torch
+
+        if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        pass
+
+
+HEAVY_CAPTION_MODELS = ("smolvlm-instruct", "qwen2.5-vl")
+
+
+def _make_room(requested: str) -> None:
+    """Keep only one big caption model in memory at a time, so a 16 GB Mac does not run out."""
+    if os.environ.get("ORBIT_KEEP_MODELS_LOADED", "0").strip().lower() in ("1", "true", "on", "yes"):
+        return
+    if requested not in HEAVY_CAPTION_MODELS:
+        return
+    freed = False
+    for model_id in HEAVY_CAPTION_MODELS:
+        if model_id == requested:
+            continue
+        other = registry.get(model_id)
+        if other is not None and other.info().loaded:
+            other.unload()
+            freed = True
+    if freed:
+        _free_memory()
+
+
+def _fallback_enabled() -> bool:
+    return os.environ.get("ORBIT_CAPTION_FALLBACK", "1").strip().lower() not in ("0", "false", "off", "no")
+
+
 @app.post("/caption")
 def caption(req: CaptionRequest):
-    adapter, error = _resolve(req.model_id or DEFAULT_CAPTION_MODEL, "caption")
-    if error:
+    requested = req.model_id or DEFAULT_CAPTION_MODEL
+    adapter, error = _resolve(requested, "caption")
+    can_fall_back = _fallback_enabled() and requested != FALLBACK_CAPTION_MODEL
+    if error is not None and (error.status_code != 503 or not can_fall_back):
         return error
     path = safe_path(req.image_path)
     if not path.exists():
         return _err(404, "image_not_found", "Image file does not exist.")
-    return adapter.caption(str(path), prompt=req.prompt)
+
+    if error is None:
+        _make_room(requested)
+        try:
+            return adapter.caption(str(path), prompt=req.prompt)
+        except (ModelUnavailable, ModelError) as err:
+            if not can_fall_back:
+                raise
+            failure = str(err)
+            adapter.unload()
+            _free_memory()
+    else:
+        failure = json.loads(error.body)["error"]["message"]
+
+    fallback, fallback_error = _resolve(FALLBACK_CAPTION_MODEL, "caption")
+    if fallback_error is not None:
+        return error if error is not None else _err(500, "model_error", failure)
+    _make_room(FALLBACK_CAPTION_MODEL)
+    print(f"[orbit] {requested} could not caption this image ({failure}). Using {FALLBACK_CAPTION_MODEL} instead.", file=sys.stderr)
+    try:
+        result = fallback.caption(str(path), prompt=req.prompt)
+    except (ModelUnavailable, ModelError):
+        return error if error is not None else _err(500, "model_error", failure)
+    result["fallback_from"] = requested
+    result["fallback_reason"] = failure
+    return result
 
 
 class ClassifyRequest(BaseModel):

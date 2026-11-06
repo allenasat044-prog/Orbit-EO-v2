@@ -32,7 +32,7 @@ type Item = {
 };
 type Point = { lat: number; lon: number };
 type Chip = { id: string; rev: number; image_url: string; display_url: string; width_px: number; height_px: number; pin_px: { x: number; y: number }; gsd_m: number | null; label: string };
-type Caption = { text: string; checkpoint: string; device: string | null; latencyMs: number | null };
+type Caption = { text: string; checkpoint: string; device: string | null; latencyMs: number | null; stage?: "quick" | "detailed" };
 type CompareResult = { model_id: string; name: string; text?: string; latency_ms?: number | null; alignment?: number | null; error?: { message: string } };
 type Comparison = {
   results: CompareResult[];
@@ -82,6 +82,12 @@ const ZOOMS: Zoom[] = [
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const HINT = "Search a place or click the globe to drop a pin.";
+
+const FAST_CAPTION_MODEL = "smolvlm-instruct";
+const BEST_CAPTION_MODEL = "qwen2.5-vl";
+
+const errText = (e: unknown) =>
+  e instanceof TypeError ? "Can't reach the server. Is the backend running on port 3000?" : e instanceof Error ? e.message : "Something went wrong.";
 
 function bboxOf(g: Geometry): [number, number, number, number] | null {
   let w = 180, s = 90, e = -180, n = -90, found = false;
@@ -142,6 +148,8 @@ export default function Explore() {
   const [monitorBusy, setMonitorBusy] = useState(false);
   const [bookmarkOpen, setBookmarkOpen] = useState(false);
   const [runBusy, setRunBusy] = useState(false);
+  const chipIdRef = useRef<string | null>(null);
+  useEffect(() => { chipIdRef.current = chip?.id ?? null; }, [chip]);
 
   useEffect(() => {
     const v = new Viewer(el.current!, {
@@ -363,37 +371,68 @@ export default function Explore() {
     }
   };
 
+  const fetchCaption = async (token: string, chipId: string, modelId: string, maxPolls: number): Promise<Caption | null> => {
+    const res = await fetch("/api/captions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ chip_id: chipId, model_id: modelId }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message ?? `Could not describe the image (${res.status})`);
+    let captionId: string | undefined = data.caption?.id;
+    if (!captionId) {
+      const jobId = data.job.id as string;
+      for (let i = 0; i < maxPolls && !captionId; i++) {
+        await sleep(1500);
+        if (chipIdRef.current !== chipId) return null;
+        const jr = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${token}` } });
+        const jd = await jr.json().catch(() => ({}));
+        if (!jr.ok) throw new Error(jd?.error?.message ?? `Could not check the caption job (${jr.status})`);
+        if (jd.job.status === "failed") throw new Error(jd.job.error?.message ?? "Captioning failed.");
+        if (jd.job.status === "succeeded") captionId = jd.job.result.caption_id as string;
+      }
+      if (!captionId) throw new Error("The caption is taking too long. Try again in a moment.");
+    }
+    const cr = await fetch(`/api/captions/${captionId}`);
+    const cd = await cr.json().catch(() => ({}));
+    if (!cr.ok) throw new Error(cd?.error?.message ?? "Could not load the caption.");
+    const c = cd.caption;
+    return { text: c.caption, checkpoint: c.model.checkpoint, device: c.model.device, latencyMs: c.latency_ms };
+  };
+
+  // Quick description first (small, fast model), then the detailed one replaces it when ready.
   const describeChip = async () => {
     const token = getToken();
     if (!chip) return;
     if (!token) { setMsg("Log in to describe imagery."); return; }
+    const chipId = chip.id;
     setCaptionBusy(true);
-    setMsg("Describing the image. The first time loads the model, which can take a minute…");
+    setCaption(null);
+    setMsg("Writing a quick description first. The first time loads the model, which can take a minute…");
     try {
-      const res = await fetch("/api/captions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ chip_id: chip.id }) });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setMsg(data?.error?.message ?? `Could not describe the image (${res.status})`); return; }
-      let captionId: string | undefined = data.caption?.id;
-      if (!captionId) {
-        const jobId = data.job.id as string;
-        for (let i = 0; i < 200 && !captionId; i++) {
-          await sleep(1500);
-          const jr = await fetch(`/api/jobs/${jobId}`, { headers: { Authorization: `Bearer ${token}` } });
-          const jd = await jr.json().catch(() => ({}));
-          if (!jr.ok) { setMsg(jd?.error?.message ?? `Could not check the caption job (${jr.status})`); return; }
-          if (jd.job.status === "failed") { setMsg(jd.job.error?.message ?? "Captioning failed."); return; }
-          if (jd.job.status === "succeeded") captionId = jd.job.result.caption_id as string;
-        }
-        if (!captionId) { setMsg("The caption is taking too long. Try again in a moment."); return; }
+      let quick: Caption | null = null;
+      try {
+        quick = await fetchCaption(token, chipId, FAST_CAPTION_MODEL, 200);
+      } catch (err) {
+        setMsg(`Quick description failed: ${errText(err)} Trying the detailed model…`);
       }
-      const cr = await fetch(`/api/captions/${captionId}`);
-      const cd = await cr.json().catch(() => ({}));
-      if (!cr.ok) { setMsg(cd?.error?.message ?? "Could not load the caption."); return; }
-      const c = cd.caption;
-      setCaption({ text: c.caption, checkpoint: c.model.checkpoint, device: c.model.device, latencyMs: c.latency_ms });
-      setMsg("Caption ready.");
-    } catch {
-      setMsg("Can't reach the server. Is the backend running on port 3000?");
+      if (chipIdRef.current !== chipId) return;
+      if (quick) {
+        setCaption({ ...quick, stage: "quick" });
+        setMsg("Quick description ready. A more detailed one is on the way…");
+      }
+      let best: Caption | null = null;
+      try {
+        best = await fetchCaption(token, chipId, BEST_CAPTION_MODEL, 800);
+      } catch (err) {
+        if (chipIdRef.current !== chipId) return;
+        setMsg(quick ? `The detailed model could not run (${errText(err)}). Showing the quick description.` : errText(err));
+        return;
+      }
+      if (!best || chipIdRef.current !== chipId) return;
+      if (quick && best.checkpoint === quick.checkpoint) {
+        setCaption({ ...quick, stage: "detailed" });
+        setMsg("The detailed model was not available, so this is the quick description.");
+        return;
+      }
+      setCaption({ ...best, stage: "detailed" });
+      setMsg("Detailed caption ready.");
     } finally {
       setCaptionBusy(false);
     }
@@ -883,6 +922,8 @@ export default function Explore() {
           )}
           {caption && (
             <Panel radius={8} className="space-y-1 rounded-lg p-3 text-sm">
+              {caption.stage === "quick" && captionBusy && <p className="text-xs text-link">Quick description. A more detailed one is loading…</p>}
+              {caption.stage === "detailed" && <p className="text-xs text-muted-foreground">Detailed description</p>}
               <p>{caption.text}</p>
               <p className="text-xs text-muted-foreground">
                 AI-generated by {caption.checkpoint}{caption.device ? ` on ${caption.device}` : ""}{caption.latencyMs != null ? ` in ${(caption.latencyMs / 1000).toFixed(1)} s` : ""}. This is a general-purpose model, not trained on satellite imagery, so treat it as a rough description, not a measurement.
@@ -907,15 +948,6 @@ export default function Explore() {
                   </li>
                 ))}
               </ul>
-              {comparison.unavailable.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Not available on this machine:{" "}
-                  {comparison.unavailable.map((u, i) => (
-                    <span key={u.model_id} title={u.reason}>{u.name}{i < comparison.unavailable.length - 1 ? ", " : ""}</span>
-                  ))}
-                  . Hover a name for the reason.
-                </p>
-              )}
               <p className="text-xs text-muted-foreground">AI-generated. Image match is a rough similarity between the image and each caption, not a measure of truth.</p>
             </Panel>
           )}
